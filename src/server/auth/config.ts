@@ -1,7 +1,7 @@
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import { env } from "~/env";
+import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 
 import { db } from "~/server/db";
 import {
@@ -10,6 +10,8 @@ import {
   users,
   verificationTokens,
 } from "~/server/db/schema";
+
+import type { UserRole } from "~/server/lib/rbac";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -21,6 +23,8 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
+      role: UserRole;
+      teamId: string;
       // ...other properties
       // role: UserRole;
     } & DefaultSession["user"];
@@ -40,6 +44,7 @@ declare module "next-auth" {
 export const authConfig = {
   providers: [
     GoogleProvider,
+    MicrosoftEntraID,
     /**
      * ...add more providers here.
      *
@@ -56,6 +61,7 @@ export const authConfig = {
     sessionsTable: sessions,
     verificationTokensTable: verificationTokens,
   }),
+
   callbacks: {
     session: ({ session, user }) => ({
       ...session,

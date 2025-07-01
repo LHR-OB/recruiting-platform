@@ -1,5 +1,4 @@
 import { type Config } from "drizzle-kit";
-
 import { env } from "~/env";
 
 export default {
@@ -7,6 +6,7 @@ export default {
   dialect: "postgresql",
   dbCredentials: {
     url: env.DATABASE_URL,
+    database: "main",
   },
-  tablesFilter: ["recruiting-platform_*"],
+  tablesFilter: ["rp_*"],
 } satisfies Config;
