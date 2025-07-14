@@ -4,6 +4,7 @@ import { hasPermission } from "~/server/lib/rbac";
 import { getTeams } from "../people/page";
 import { columns, type Application } from "./_components/columns";
 import { DataTable } from "./_components/data-table";
+import { db } from "~/server/db";
 
 const Page = async () => {
   const session = await auth();
@@ -21,32 +22,24 @@ const Page = async () => {
     teams.map((team) => [team.id, team.name]),
   );
 
-  // Mock data for now
-  const data: Application[] = [
-    {
-      id: "1",
-      data: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      teamId: "1",
-      teamName: "Solar",
-      userId: "1",
-      status: "PENDING",
-      systemId: "1",
-      applicationCycleId: "1",
+  const data = await db.query.applications.findMany({
+    where: (applications, { eq }) =>
+      eq(applications.teamId, session.user.teamId),
+    with: {
       user: {
-        id: "1",
-        name: "John Doe",
-        email: "123@gmail.com",
-        emailVerified: new Date(),
-        image: "",
-        role: "ADMIN",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        teamId: "1",
+        columns: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      team: {
+        columns: {
+          name: true,
+        },
       },
     },
-  ];
+  });
 
   return (
     <>
@@ -60,9 +53,12 @@ const Page = async () => {
           team.
         </p>
       </div>
-      <div className="absolute left-0 w-full border-b" />
-      <div className="pt-4">
-        <DataTable columns={columns} data={data} />
+      <div className="absolute left-0 container mx-auto border-b" />
+      <div className="h-max pt-4">
+        <DataTable
+          columns={columns}
+          data={data.map((app) => ({ ...app, teamName: app.team.name }))}
+        />
       </div>
     </>
   );

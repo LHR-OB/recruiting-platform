@@ -2,11 +2,23 @@
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { DialogFooter, DialogClose } from "~/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import type { InferSelectModel } from "drizzle-orm";
 import type { users } from "~/server/db/schema";
 import { useRouter } from "next/navigation";
 
 interface Team {
+  id: string;
+  name: string;
+}
+
+interface System {
   id: string;
   name: string;
 }
@@ -20,25 +32,34 @@ interface Session {
 export default function UserRoleTeamForm({
   user,
   teams,
+  systems,
   roleOptions,
   session,
   onSubmit,
 }: {
   user: Pick<InferSelectModel<typeof users>, "id" | "role" | "teamId">;
   teams: Team[];
+  systems: Record<string, System[]>;
   roleOptions: string[];
   session: Session;
   onSubmit: (formData: FormData) => Promise<void>;
 }) {
   const [role, setRole] = useState<typeof user.role>(user.role);
   const [teamId, setTeamId] = useState(user.teamId ?? "");
+  const [systemId, setSystemId] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Get systems for the selected team
+  const availableSystems = teamId ? (systems[teamId] ?? []) : [];
   const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData();
+    formData.append("role", role);
+    formData.append("teamId", teamId);
+    formData.append("systemId", systemId);
     await onSubmit(formData);
     setLoading(false);
 
@@ -49,38 +70,72 @@ export default function UserRoleTeamForm({
     <form onSubmit={handleSubmit}>
       <div className="mb-4">
         <label className="mb-1 block">Role</label>
-        <select
-          name="role"
+        <Select
           value={role}
-          onChange={(e) => setRole(e.target.value as typeof user.role)}
-          className="w-full rounded border px-2 py-1"
+          onValueChange={(value) => setRole(value as typeof user.role)}
         >
-          {roleOptions.map((roleOption) => (
-            <option
-              key={roleOption}
-              value={roleOption}
-              disabled={roleOption === "ADMIN" && session.user.role !== "ADMIN"}
-            >
-              {roleOption}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a role" />
+          </SelectTrigger>
+          <SelectContent>
+            {roleOptions.map((roleOption) => (
+              <SelectItem
+                key={roleOption}
+                value={roleOption}
+                disabled={
+                  roleOption === "ADMIN" && session.user.role !== "ADMIN"
+                }
+              >
+                {roleOption}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div className="mb-4">
         <label className="mb-1 block">Team</label>
-        <select
-          name="teamId"
+        <Select
           value={teamId}
-          onChange={(e) => setTeamId(e.target.value)}
-          className="w-full rounded border px-2 py-1"
+          onValueChange={(value) => {
+            setTeamId(value);
+            setSystemId(""); // Reset system selection when team changes
+          }}
         >
-          {teams.map((team) => (
-            <option key={team.id} value={team.id}>
-              {team.name}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a team" />
+          </SelectTrigger>
+          <SelectContent>
+            {teams.map((team) => (
+              <SelectItem key={team.id} value={team.id}>
+                {team.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
+
+      <div className="mb-4">
+        <label className="mb-1 block">System</label>
+        <Select
+          value={systemId}
+          onValueChange={setSystemId}
+          disabled={!teamId || availableSystems.length === 0}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue
+              placeholder={!teamId ? "Select a team first" : "Select a system"}
+            />
+          </SelectTrigger>
+          <SelectContent>
+            {availableSystems.map((system) => (
+              <SelectItem key={system.id} value={system.id}>
+                {system.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       <DialogFooter>
         <Button type="submit" disabled={loading}>
           {loading ? "Saving..." : "Save"}

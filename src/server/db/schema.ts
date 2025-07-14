@@ -9,6 +9,7 @@ import {
   text as pgText,
   integer as pgInteger,
   pgEnum,
+  jsonb as pgJsonb,
 } from "drizzle-orm/pg-core";
 import type { AdapterAccount } from "next-auth/adapters";
 
@@ -17,6 +18,7 @@ export const createTable = pgTableCreator((name) => `rp_${name}`);
 export const userRoleEnum = pgEnum("user_role_enum", [
   "APPLICANT",
   "MEMBER",
+  "SYSTEM_LEADER",
   "TEAM_MANAGEMENT",
   "ADMIN",
 ]);
@@ -35,7 +37,8 @@ export const users = createTable("user", (_) => ({
   }).default(sql`CURRENT_TIMESTAMP`),
   image: pgVarchar("image", { length: 255 }),
   role: userRoleEnum("role").default("APPLICANT").notNull(),
-  // teamId will be added/defined after teams table is created or through relations
+  system: pgVarchar("system", { length: 255 }),
+  systemId: pgVarchar("systemId", { length: 255 }),
   teamId: pgVarchar("teamId", { length: 255 }), // Define as plain column first
   createdAt: pgTimestamp("createdAt", { withTimezone: true })
     .default(sql`CURRENT_TIMESTAMP`)
@@ -195,6 +198,14 @@ export const applicationCycles = createTable(
   (t) => [index("application_cycle_name_idx").on(t.name)],
 );
 
+export const applicationStatusEnum = pgEnum("application_status_enum", [
+  "DRAFT",
+  "SUBMITTED",
+  "REVIEWED",
+  "ACCEPTED",
+  "REJECTED",
+]);
+
 export const applications = createTable(
   "application",
   (_) => ({
@@ -207,14 +218,15 @@ export const applications = createTable(
     teamId: pgVarchar("teamId", { length: 255 })
       .notNull()
       .references(() => teams.id, { onDelete: "cascade" }),
-    systemId: pgVarchar("systemId", { length: 255 })
-      .notNull()
-      .references(() => systems.id, { onDelete: "cascade" }),
+    systemId: pgVarchar("systemId", { length: 255 }).references(
+      () => systems.id,
+      { onDelete: "cascade" },
+    ),
     applicationCycleId: pgVarchar("applicationCycleId", { length: 255 })
       .notNull()
       .references(() => applicationCycles.id, { onDelete: "cascade" }),
-    status: pgVarchar("status", { length: 64 }).notNull(), // e.g. SUBMITTED, REVIEWED, etc.
-    data: pgText("data"), // JSON or text blob for application answers
+    status: applicationStatusEnum().notNull(), // e.g. SUBMITTED, REVIEWED, etc.
+    data: pgJsonb("data"), // JSON or text blob for application answers
     createdAt: pgTimestamp("createdAt", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -229,6 +241,21 @@ export const applications = createTable(
     index("application_system_idx").on(t.systemId),
   ],
 );
+
+export const applicationsRelations = relations(applications, ({ one }) => ({
+  user: one(users, {
+    fields: [applications.userId],
+    references: [users.id],
+  }),
+  team: one(teams, {
+    fields: [applications.teamId],
+    references: [teams.id],
+  }),
+  cycle: one(applicationCycles, {
+    fields: [applications.applicationCycleId],
+    references: [applicationCycles.id],
+  }),
+}));
 
 export const availabilities = createTable(
   "availability",
@@ -320,6 +347,10 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   team: one(teams, {
     fields: [users.teamId],
     references: [teams.id],
+  }),
+  system: one(systems, {
+    fields: [users.systemId],
+    references: [systems.id],
   }),
   usersToEvents: many(usersToEvents),
   usersToSystems: many(usersToSystems),
@@ -470,5 +501,16 @@ export const interviewNotesRelations = relations(interviewNotes, ({ one }) => ({
   createdBy: one(users, {
     fields: [interviewNotes.createdById],
     references: [users.id],
+  }),
+}));
+
+export const availabilitiesRelations = relations(availabilities, ({ one }) => ({
+  user: one(users, {
+    fields: [availabilities.userId],
+    references: [users.id],
+  }),
+  system: one(systems, {
+    fields: [availabilities.systemId],
+    references: [systems.id],
   }),
 }));

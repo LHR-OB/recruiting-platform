@@ -6,8 +6,13 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
+  --font-sans:
+    var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  --font-mono:
+    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 @theme inline {
@@ -148,11 +153,11 @@
   }
 
   ul {
-    @apply list-disc pl-5 marker:text-muted-foreground;
+    @apply marker:text-muted-foreground list-disc pl-5;
   }
 
   ol {
-    @apply list-decimal pl-5 marker:text-muted-foreground;
+    @apply marker:text-muted-foreground list-decimal pl-5;
   }
 
   li {

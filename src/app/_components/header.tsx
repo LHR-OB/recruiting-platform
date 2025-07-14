@@ -39,14 +39,14 @@ const Header = async () => {
 
   return (
     <div className="w-full border-b">
-      <header className="container mx-auto flex py-2">
+      <header className="container mx-auto flex py-2.5">
         <nav className="flex w-full justify-between">
           <div className="flex gap-1">
             {Object.entries(defaultLinks).map(([name, href]) => (
               <Link
                 key={name}
                 href={href}
-                className={cn(buttonVariants({ variant: "link" }))}
+                className={cn(buttonVariants({ variant: "link", size: "sm" }))}
               >
                 {name}
               </Link>
@@ -56,7 +56,9 @@ const Header = async () => {
                 <Link
                   key={name}
                   href={href}
-                  className={cn(buttonVariants({ variant: "link" }))}
+                  className={cn(
+                    buttonVariants({ variant: "link", size: "sm" }),
+                  )}
                 >
                   {name}
                 </Link>
@@ -66,7 +68,9 @@ const Header = async () => {
                 <Link
                   key={name}
                   href={href}
-                  className={cn(buttonVariants({ variant: "link" }))}
+                  className={cn(
+                    buttonVariants({ variant: "link", size: "sm" }),
+                  )}
                 >
                   {name}
                 </Link>
@@ -76,7 +80,9 @@ const Header = async () => {
                 <Link
                   key={name}
                   href={href}
-                  className={cn(buttonVariants({ variant: "link" }))}
+                  className={cn(
+                    buttonVariants({ variant: "link", size: "sm" }),
+                  )}
                 >
                   {name}
                 </Link>
@@ -86,7 +92,7 @@ const Header = async () => {
             {session ? (
               <Link
                 href="/profile"
-                className={cn(buttonVariants({ variant: "link" }))}
+                className={cn(buttonVariants({ variant: "link", size: "sm" }))}
               >
                 {session.user.name ?? "Profile"}
               </Link>

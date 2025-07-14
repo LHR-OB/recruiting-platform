@@ -17,14 +17,32 @@ import {
 } from "~/components/ui/dialog";
 import { updateUserRoleAndTeam } from "./actions";
 import { teams as teamsTable, userRoleEnum } from "~/server/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, type InferSelectModel } from "drizzle-orm";
 import UserRoleTeamForm from "./_components/UserRoleTeamForm";
+import { systems } from "../../server/db/schema";
 
 export async function getTeams() {
   "use cache";
   const teams = await db.select().from(teamsTable);
 
   return teams;
+}
+
+export async function getSystems() {
+  "use cache";
+
+  const allSystems = await db.select().from(systems);
+
+  return allSystems.reduce(
+    (acc, system) => {
+      acc[system.teamId] = [
+        ...(system.teamId in acc ? acc[system.teamId]! : []),
+        system,
+      ];
+      return acc;
+    },
+    {} as Record<string, InferSelectModel<typeof systems>[]>,
+  );
 }
 
 const limit = 10;
@@ -62,6 +80,8 @@ const Page = async ({
   const teams = await getTeams();
   const idToNameMap = new Map(teams.map((team) => [team.id, team.name]));
   const roleOptions = userRoleEnum.enumValues;
+
+  const systems = await getSystems();
 
   return (
     <>
@@ -120,6 +140,7 @@ const Page = async ({
                           <UserRoleTeamForm
                             user={user}
                             teams={teams}
+                            systems={systems}
                             roleOptions={roleOptions}
                             session={session}
                             onSubmit={async (formData) => {

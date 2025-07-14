@@ -1,7 +1,6 @@
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 
 import { db } from "~/server/db";
 import {
@@ -44,7 +43,6 @@ declare module "next-auth" {
 export const authConfig = {
   providers: [
     GoogleProvider,
-    MicrosoftEntraID,
     /**
      * ...add more providers here.
      *

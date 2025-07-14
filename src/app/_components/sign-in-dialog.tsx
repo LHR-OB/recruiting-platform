@@ -21,12 +21,13 @@ const SignInDialog = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Login</Button>
+        <Button size="sm">Login</Button>
       </DialogTrigger>
       <DialogContent className="w-md">
         <DialogTitle className="text-center">Sign In</DialogTitle>
         <DialogDescription className="text-center">
-          utexas.edu email required to sign in.
+          You may sign in with any Google account, but you&apos;re required to
+          verify with your eid@eid.utexas.edu before submitting
         </DialogDescription>
         <div className="mt-8 space-y-1">
           <Button

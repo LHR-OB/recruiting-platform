@@ -7,6 +7,59 @@ import { Badge } from "~/components/ui/badge";
 import Link from "next/link";
 import { cn } from "~/lib/utils";
 import { getTeams } from "../people/page";
+import { applications } from "~/server/db/schema";
+import CreateApplicationOrRedirect from "./_components/create-application-or-redirect";
+import { redirect } from "next/navigation";
+
+async function createApplication(teamId: string) {
+  "use server";
+
+  const session = await auth();
+  if (!session) {
+    throw new Error("User not authenticated");
+  }
+
+  if (session.user.role !== "APPLICANT") {
+    throw new Error("User does not have permission to create applications");
+  }
+
+  const currentCycle = await db.query.applicationCycles.findFirst({
+    where: (ac, { eq }) => eq(ac.stage, "APPLICATION"),
+    orderBy: (ac, { desc }) => desc(ac.startDate),
+  });
+
+  const userApplications = await db.query.applications.findMany({
+    where: (applications, { eq }) => eq(applications.userId, session.user.id),
+  });
+
+  if (
+    userApplications.some(
+      (app) =>
+        app.teamId === teamId && app.applicationCycleId === currentCycle?.id,
+    )
+  ) {
+    redirect(
+      `/application/${
+        userApplications.find(
+          (e) =>
+            e.teamId === teamId && e.applicationCycleId === currentCycle?.id,
+        )!.id
+      }`,
+    );
+  }
+
+  const newApplication = await db
+    .insert(applications)
+    .values({
+      applicationCycleId: currentCycle!.id,
+      status: "DRAFT",
+      teamId,
+      userId: session.user.id,
+    })
+    .returning();
+
+  return newApplication[0]!.id;
+}
 
 export default async function ApplicationsPage() {
   const user = await auth();
@@ -15,7 +68,9 @@ export default async function ApplicationsPage() {
     return <div>Please sign in to view applications</div>;
   }
 
-  const cycles = await db.query.applicationCycles.findMany();
+  const cycles = await db.query.applicationCycles.findMany({
+    orderBy: (ac, { asc }) => asc(ac.endDate),
+  });
 
   const applications = await db.query.applications.findMany({
     where: (applications, { eq }) => eq(applications.userId, user.user.id),
@@ -59,43 +114,57 @@ export default async function ApplicationsPage() {
                     {cycle.stage === "APPLICATION" ? "Open" : "Closed"}
                   </Badge>
                 </div>
-                {openForApplications && user.user.role === "APPLICANT" && (
-                  <Button>
-                    <PlusIcon className="size-4" />
-                    New Application
-                  </Button>
-                )}
               </div>
               <p className="text-muted-foreground">
                 {cycle.startDate.toLocaleDateString()} to{" "}
                 {cycle.endDate.toLocaleDateString()}
               </p>
               {openForApplications && (
-                <>
-                  <p className="text-muted-foreground">
-                    This cycle is currently open for applications. You can
-                    submit a new application or edit your existing applications.
-                  </p>
-                  <p className="mt-2">The following teams recruiting are:</p>
-                  <div className="flex flex-col gap-2 pt-1">
-                    {teams.map((team) => (
+                <p className="text-muted-foreground">
+                  This cycle is currently open for applications. You can submit
+                  a new application or edit your existing applications.
+                </p>
+              )}
+              <div className="flex flex-col gap-2 pt-4">
+                {openForApplications &&
+                  user.user.role === "APPLICANT" &&
+                  teams.map((team) => (
+                    <CreateApplicationOrRedirect
+                      key={team.id}
+                      teamName={team.name}
+                      action={async function () {
+                        "use server";
+                        return await createApplication(team.id);
+                      }}
+                    />
+                  ))}
+                {!openForApplications &&
+                  applications
+                    .filter(
+                      (app) =>
+                        app.applicationCycleId === cycle.id &&
+                        app.status !== "DRAFT",
+                    )
+                    .map((app) => (
                       <Link
-                        href={"/teams/[teamId]"}
-                        as={`/teams/${team.id}`}
-                        key={team.id}
+                        href="/application/[applicationid]"
+                        as={`/application/${app.id}`}
+                        key={app.id}
                         className={cn(
-                          buttonVariants({ variant: "secondary" }),
-                          "group w-48 justify-between",
+                          buttonVariants({ variant: "outline" }),
+                          "w-72 justify-between",
                         )}
                       >
-                        {team.name}
-                        <ChevronRightIcon className="transition-transform group-hover:translate-x-0.5" />
+                        <span className="flex items-center gap-2">
+                          {teams.find((t) => t.id === app.teamId)?.name}
+                        </span>
+                        <span className="text-muted-foreground text-xs">
+                          {app.status}
+                        </span>
                       </Link>
                     ))}
-                  </div>
-                </>
-              )}
-              <div className="pt-6" />
+                <div className="pt-6" />
+              </div>
               <div className="absolute left-0 w-full border-b" />
             </div>
           );
