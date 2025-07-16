@@ -186,14 +186,15 @@ export function InterviewBookingCalendar({
               </p>
             </div>
           )}
-          
+
           {systems.length > 1 && (
             <div className="mb-4 rounded-lg bg-orange-50 p-3 text-sm dark:bg-orange-950">
               <p className="font-medium text-orange-900 dark:text-orange-100">
                 Multiple Systems Available
               </p>
               <p className="text-orange-700 dark:text-orange-300">
-                You can interview for multiple systems because you applied for Solar.
+                You can interview for multiple systems because you applied for
+                Solar.
               </p>
             </div>
           )}

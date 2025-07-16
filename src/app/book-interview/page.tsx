@@ -20,13 +20,14 @@ export default async function BookInterviewPage() {
               Select Interview Slot
             </h2>
             <p className="text-muted-foreground mb-6">
-              Choose a 30-minute interview slot from the available times. 
+              Choose a 30-minute interview slot from the available times.
               {systems.length > 1 ? (
-                <span className="block mt-2 text-sm font-medium text-orange-600 dark:text-orange-400">
-                  Note: You can interview for multiple systems because you applied for Solar.
+                <span className="mt-2 block text-sm font-medium text-orange-600 dark:text-orange-400">
+                  Note: You can interview for multiple systems because you
+                  applied for Solar.
                 </span>
               ) : (
-                <span className="block mt-2 text-sm">
+                <span className="mt-2 block text-sm">
                   You can interview for your top system preference.
                 </span>
               )}

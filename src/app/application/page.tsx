@@ -86,11 +86,9 @@ export default async function ApplicationsPage() {
           View and manage your applications for the Longhorn Racing team.
         </p>
         <p className="text-muted-foreground">
-          {(!cycles.some(
-            (cycle) => cycle.stage !== "PREPARATION" && cycle.stage !== "FINAL",
-          ) &&
-            "We're currently not accepting applications.") ||
-            "We are accepting applications."}
+          {(cycles.some((cycle) => cycle.stage === "APPLICATION") &&
+            "We are accepting applications.") ||
+            "We're currently not accepting applications."}
         </p>
       </div>
       <div className="absolute left-0 w-full border-b" />
@@ -159,7 +157,11 @@ export default async function ApplicationsPage() {
                           {teams.find((t) => t.id === app.teamId)?.name}
                         </span>
                         <span className="text-muted-foreground text-xs">
-                          {app.status}
+                          {["SUBMITTED", "REVIEWED"].includes(app.status)
+                            ? app.status === "REVIEWED"
+                              ? "IN REVIEW"
+                              : "SUBMITTED"
+                            : "View Results"}
                         </span>
                       </Link>
                     ))}

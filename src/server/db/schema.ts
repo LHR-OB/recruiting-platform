@@ -46,6 +46,9 @@ export const users = createTable("user", (_) => ({
   updatedAt: pgTimestamp("updatedAt", { withTimezone: true }).$onUpdate(
     () => new Date(),
   ),
+  resumeUrl: pgVarchar("resumeUrl", { length: 255 }), // Optional resume URL
+  eidEmail: pgVarchar("eidEmail", { length: 255 }), // Optional EID email
+  eidEmailVerified: pgBoolean("eidEmailVerified").default(false).notNull(), // EID email verification status
 }));
 
 // Define teams table, referencing users.id
@@ -175,7 +178,7 @@ export const usersToSystems = createTable(
 // enum for application cycle status
 export const applicationCycleStatusEnum = pgEnum(
   "application_cycle_status_enum",
-  ["PREPARATION", "APPLICATION", "INTERVIEW", "FINAL"],
+  ["PREPARATION", "APPLICATION", "INTERVIEW", "TRAIL", "FINAL"],
 );
 
 export const applicationCycles = createTable(
@@ -196,6 +199,32 @@ export const applicationCycles = createTable(
     ),
   }),
   (t) => [index("application_cycle_name_idx").on(t.name)],
+);
+
+// Table for detailed stage timelines within each application cycle
+export const applicationCycleStages = createTable(
+  "application_cycle_stage",
+  (_) => ({
+    id: pgVarchar("id", { length: 255 })
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    cycleId: pgVarchar("cycleId", { length: 255 })
+      .notNull()
+      .references(() => applicationCycles.id, { onDelete: "cascade" }),
+    stage: applicationCycleStatusEnum("stage").notNull(),
+    startDate: pgTimestamp("startDate", { withTimezone: true }).notNull(),
+    endDate: pgTimestamp("endDate", { withTimezone: true }).notNull(),
+    createdAt: pgTimestamp("createdAt", { withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: pgTimestamp("updatedAt", { withTimezone: true }).$onUpdate(
+      () => new Date(),
+    ),
+  }),
+  (t) => [
+    index("cycle_stage_idx").on(t.cycleId, t.stage),
+    index("cycle_stage_dates_idx").on(t.cycleId, t.startDate, t.endDate),
+  ],
 );
 
 export const applicationStatusEnum = pgEnum("application_status_enum", [
@@ -225,7 +254,11 @@ export const applications = createTable(
     applicationCycleId: pgVarchar("applicationCycleId", { length: 255 })
       .notNull()
       .references(() => applicationCycles.id, { onDelete: "cascade" }),
-    status: applicationStatusEnum().notNull(), // e.g. SUBMITTED, REVIEWED, etc.
+    status: applicationStatusEnum().notNull(),
+    internalStatus: applicationCycleStatusEnum()
+      .notNull()
+      .default("APPLICATION"),
+    internalDecision: applicationStatusEnum(),
     data: pgJsonb("data"), // JSON or text blob for application answers
     createdAt: pgTimestamp("createdAt", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
@@ -503,6 +536,24 @@ export const interviewNotesRelations = relations(interviewNotes, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+export const applicationCyclesRelations = relations(
+  applicationCycles,
+  ({ many }) => ({
+    stages: many(applicationCycleStages),
+    applications: many(applications),
+  }),
+);
+
+export const applicationCycleStagesRelations = relations(
+  applicationCycleStages,
+  ({ one }) => ({
+    cycle: one(applicationCycles, {
+      fields: [applicationCycleStages.cycleId],
+      references: [applicationCycles.id],
+    }),
+  }),
+);
 
 export const availabilitiesRelations = relations(availabilities, ({ one }) => ({
   user: one(users, {

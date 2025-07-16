@@ -137,6 +137,16 @@ export const columns: ColumnDef<Application>[] = [
     filterFn: "includesString",
   },
   {
+    id: "internalStatus",
+    accessorKey: "internalStatus",
+    header: "Internal Status",
+  },
+  {
+    id: "internalDecision",
+    accessorKey: "internalDecision",
+    header: "Internal Decision",
+  },
+  {
     id: "actions",
     cell: ({ row }) => {
       const { original } = row;

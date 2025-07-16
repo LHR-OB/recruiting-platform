@@ -25,7 +25,7 @@ const managementLinks = {
 };
 
 const adminLinks = {
-  Admin: "/admin",
+  Cycles: "/cycles",
 };
 
 async function signInAction() {
