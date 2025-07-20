@@ -5,18 +5,19 @@ import { Button } from "~/components/ui/button";
 const CreateApplicationOrRedirect = ({
   teamName,
   action,
+  children,
 }: {
   teamName: string;
   action: () => Promise<string | void>;
+  children?: React.ReactNode;
 }) => {
   return (
     <Button
       variant="outline"
-      className="group w-72 justify-between"
+      className="group flex w-72"
       onClick={() => action()}
     >
-      {teamName} Application
-      <ChevronRightIcon className="transition-transform group-hover:translate-x-0.5" />
+      {children}
     </Button>
   );
 };

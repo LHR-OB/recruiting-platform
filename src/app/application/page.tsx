@@ -74,6 +74,9 @@ export default async function ApplicationsPage() {
 
   const applications = await db.query.applications.findMany({
     where: (applications, { eq }) => eq(applications.userId, user.user.id),
+    with: {
+      team: true,
+    },
   });
 
   const teams = await getTeams();
@@ -124,46 +127,67 @@ export default async function ApplicationsPage() {
                 </p>
               )}
               <div className="flex flex-col gap-2 pt-4">
-                {openForApplications &&
-                  user.user.role === "APPLICANT" &&
-                  teams.map((team) => (
-                    <CreateApplicationOrRedirect
-                      key={team.id}
-                      teamName={team.name}
-                      action={async function () {
-                        "use server";
-                        return await createApplication(team.id);
-                      }}
-                    />
-                  ))}
-                {!openForApplications &&
+                {user.user.role === "APPLICANT" &&
                   applications
-                    .filter(
+                    .filter((app) => app.applicationCycleId === cycle.id)
+                    .map(
                       (app) =>
-                        app.applicationCycleId === cycle.id &&
-                        app.status !== "DRAFT",
+                        ({ app, team: app.team }) as {
+                          app: (typeof applications)[number] | undefined;
+                          team: (typeof teams)[number];
+                        },
                     )
-                    .map((app) => (
-                      <Link
-                        href="/application/[applicationid]"
-                        as={`/application/${app.id}`}
-                        key={app.id}
-                        className={cn(
-                          buttonVariants({ variant: "outline" }),
-                          "w-72 justify-between",
-                        )}
+                    .concat(
+                      teams
+                        .filter(
+                          (team) =>
+                            !applications.some((app) => app.teamId === team.id),
+                        )
+                        .map((team) => ({
+                          team,
+                          app: undefined,
+                        })),
+                    )
+                    .sort((a, b) => {
+                      if (
+                        a.app?.status !== "DRAFT" &&
+                        b.app?.status === "DRAFT"
+                      ) {
+                        return -1;
+                      } else if (
+                        a.app?.status === "DRAFT" &&
+                        b.app?.status !== "DRAFT"
+                      ) {
+                        return 1;
+                      }
+
+                      return a.team.name.localeCompare(b.team.name);
+                    })
+                    .map(({ team, app }) => (
+                      <CreateApplicationOrRedirect
+                        key={team.id}
+                        teamName={team.name}
+                        action={async function () {
+                          "use server";
+                          return await createApplication(team.id);
+                        }}
                       >
                         <span className="flex items-center gap-2">
-                          {teams.find((t) => t.id === app.teamId)?.name}
+                          {team.name}
                         </span>
-                        <span className="text-muted-foreground text-xs">
-                          {["SUBMITTED", "REVIEWED"].includes(app.status)
-                            ? app.status === "REVIEWED"
-                              ? "IN REVIEW"
-                              : "SUBMITTED"
-                            : "View Results"}
-                        </span>
-                      </Link>
+                        <div className="text-muted-foreground flex grow justify-end gap-2">
+                          {app && (
+                            <span className="text-xs">
+                              {["DRAFT", "SUBMITTED", "REVIEWED"].includes(
+                                app.status,
+                              )
+                                ? `${app.status}`
+                                : "View Results"}
+                            </span>
+                          )}
+                          <ChevronRightIcon className="transition-transform group-hover:translate-x-0.5" />
+                        </div>
+                      </CreateApplicationOrRedirect>
                     ))}
                 <div className="pt-6" />
               </div>

@@ -9,6 +9,7 @@ import {
 import StarterKit from "@tiptap/starter-kit";
 import { api } from "~/trpc/react";
 import { useDebouncedCallback } from "use-debounce";
+import { Placeholder } from "@tiptap/extensions";
 
 const Editor = ({
   teamId,
@@ -21,7 +22,6 @@ const Editor = ({
   const onUpdate = useDebouncedCallback(
     ({ editor }: EditorEvents["update"]) => {
       const content = editor.getJSON();
-      console.log(content);
       updateContentMutation.mutate({
         id: teamId,
         mdx: JSON.stringify(content),
@@ -31,7 +31,13 @@ const Editor = ({
   );
 
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [
+      StarterKit,
+      Placeholder.configure({
+        // Use a placeholder:
+        placeholder: "Write something …",
+      }),
+    ],
     content,
     onUpdate,
   });

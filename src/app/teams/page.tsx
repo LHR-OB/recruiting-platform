@@ -34,7 +34,10 @@ const TeamsPage = async () => {
     return notFound();
   }
 
-  if (!hasPermission(session, session.user.teamId, "update")) {
+  if (
+    !hasPermission(session, session.user.teamId, "update") &&
+    !hasPermission(session, session.user.systemId, "update")
+  ) {
     return notFound();
   }
 
@@ -130,13 +133,15 @@ const TeamsPage = async () => {
                                   variant: "secondary",
                                   size: "sm",
                                 }),
-                                "flex gap-1 rounded-sm text-xs",
+                                "flex gap-1 text-xs",
                               )}
                             >
                               <StickyNoteIcon />
                               <span className="ml-1">View System</span>
                             </Link>
-                            <EditSystemDialog system={system} />
+                            {hasPermission(session, system.id, "update") && (
+                              <EditSystemDialog system={system} />
+                            )}
                           </div>
                         </div>
                       ))}

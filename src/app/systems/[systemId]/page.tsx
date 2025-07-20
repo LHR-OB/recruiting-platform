@@ -50,8 +50,6 @@ export default async function SystemPage({
     ? generateHTML(JSON.parse(system.mdx) as JSONContent, [StarterKit])
     : null;
 
-  console.log(await rbac.permissionForSystem(systemId));
-
   return (
     <>
       <div className="pb-6">
@@ -60,7 +58,7 @@ export default async function SystemPage({
       </div>
       <div className="absolute left-0 w-full border-b" />
       <div className="pt-4">
-        {(session && (await rbac.permissionForSystem(session.user.teamId)) && (
+        {(session && rbac.permissionForStaticResource(systemId, "update") && (
           <Editor
             systemId={systemId}
             // stinks

@@ -48,8 +48,8 @@ export function EditSystemDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="secondary" size="sm">
-          <Settings2 className="h-4 w-4" />
+        <Button variant="secondary" size="sm" className="text-xs">
+          <Settings2 />
           Edit System
         </Button>
       </DialogTrigger>

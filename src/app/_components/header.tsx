@@ -63,7 +63,7 @@ const Header = async () => {
                   {name}
                 </Link>
               ))}
-            {isAtLeast(session?.user.role, "TEAM_MANAGEMENT") &&
+            {isAtLeast(session?.user.role, "SYSTEM_LEADER") &&
               Object.entries(managementLinks).map(([name, href]) => (
                 <Link
                   key={name}

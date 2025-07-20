@@ -7,6 +7,10 @@ import { TRPCReactProvider } from "~/trpc/react";
 import Header from "./_components/header";
 import Footer from "./_components/footer";
 import { ThemeProvider } from "next-themes";
+import { Toaster } from "~/components/ui/sonner";
+
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: "Create T3 App",
@@ -23,7 +27,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-geist-mono",
 });
-
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -50,7 +53,10 @@ export default function RootLayout({
             </main>
           </ThemeProvider>
         </TRPCReactProvider>
+        <Toaster />
       </body>
+      <SpeedInsights />
+      <Analytics />
     </html>
   );
 }

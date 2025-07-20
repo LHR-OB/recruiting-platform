@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Button } from "~/components/ui/button";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
-import { UserRbac } from "~/server/lib/rbac";
+import { isAtLeast, UserRbac } from "~/server/lib/rbac";
 import Search from "./_components/search";
 import {
   Dialog,
@@ -61,7 +61,12 @@ const Page = async ({
 
   const rbac = new UserRbac(session.user);
 
-  if (!rbac.permissionForStaticResource(session.user.teamId, "read")) {
+  console.log("User permissions:", rbac);
+
+  if (
+    !rbac.permissionForStaticResource(session.user.teamId, "update") &&
+    !rbac.permissionForStaticResource(session.user.systemId, "update")
+  ) {
     return notFound();
   }
 
@@ -110,9 +115,8 @@ const Page = async ({
           </thead>
           <tbody>
             {users.map((user, index) => {
-              const canEdit = ["TEAM_MANAGEMENT", "ADMIN"].includes(
-                session.user.role,
-              );
+              const canEdit = isAtLeast("SYSTEM_LEADER", session.user.role);
+
               return (
                 <tr key={user.id}>
                   <td className="text-muted-foreground px-2 py-2">
@@ -152,6 +156,9 @@ const Page = async ({
                                 ) as (typeof userRoleEnum.enumValues)[number],
                                 teamId: formData.get("teamId") as string,
                                 currentUserRole: session.user.role,
+                                systemId: formData.get("systemId") as
+                                  | string
+                                  | undefined,
                               });
                             }}
                           />

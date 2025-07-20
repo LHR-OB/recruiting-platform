@@ -99,7 +99,11 @@ export const columns: ColumnDef<Application>[] = [
   },
   {
     accessorFn: (row) =>
-      [row.data.system1, row.data.system2, row.data.system3].join(", "),
+      [
+        row.data?.system1 ?? "",
+        row.data?.system2 ?? "",
+        row.data?.system3 ?? "",
+      ] ?? "".join(", "),
     header: "Systems",
   },
   {
@@ -163,8 +167,15 @@ export const columns: ColumnDef<Application>[] = [
               <SheetHeader>
                 <SheetTitle>{original.user.name}</SheetTitle>
                 <SheetDescription>
-                  This action cannot be undone. This will permanently delete
-                  your account and remove your data from our servers.
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">
+                      {/* {original.user} */}
+                    </span>
+                    <Badge variant="secondary">{original.teamName}</Badge>
+                  </div>
+                  <p className="text-muted-foreground mt-2">
+                    View and manage application details.
+                  </p>
                 </SheetDescription>
               </SheetHeader>
             </SheetContent>

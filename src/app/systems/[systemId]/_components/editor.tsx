@@ -9,6 +9,7 @@ import {
 import StarterKit from "@tiptap/starter-kit";
 import { api } from "~/trpc/react";
 import { useDebouncedCallback } from "use-debounce";
+import { Placeholder } from "@tiptap/extensions";
 
 const Editor = ({
   systemId,
@@ -31,7 +32,13 @@ const Editor = ({
   );
 
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [
+      StarterKit,
+      Placeholder.configure({
+        // Use a placeholder:
+        placeholder: "Write something …",
+      }),
+    ],
     content,
     onUpdate,
   });

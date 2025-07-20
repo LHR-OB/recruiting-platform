@@ -5,6 +5,7 @@ import { CheckIcon, LoaderCircleIcon, LoaderIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ozef from "ozef";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { useDebouncedCallback } from "use-debounce";
 import { z } from "zod";
 import { Badge } from "~/components/ui/badge";
@@ -123,6 +124,11 @@ const ApplicationForm = ({
       className="flex flex-col gap-4 pt-4"
       onSubmit={async () => {
         await submitApplication();
+
+        toast("Successfully submitted application", {
+          description: "Your application has been submitted successfully.",
+          position: "bottom-left",
+        });
 
         router.refresh();
       }}

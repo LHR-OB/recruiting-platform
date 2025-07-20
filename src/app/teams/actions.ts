@@ -76,6 +76,8 @@ export async function editTeam(
     return { message: "Invalid team ID." };
   }
 
+  console.log(hasPermission(session, teamId, "update"));
+
   if (!hasPermission(session, teamId, "update"))
     return {
       message: "You do not have permission to edit this team.",
