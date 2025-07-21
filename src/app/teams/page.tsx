@@ -139,9 +139,12 @@ const TeamsPage = async () => {
                               <StickyNoteIcon />
                               <span className="ml-1">View System</span>
                             </Link>
-                            {hasPermission(session, system.id, "update") && (
-                              <EditSystemDialog system={system} />
-                            )}
+                            {hasPermission(
+                              session,
+                              system.id,
+                              "update",
+                              "system",
+                            ) && <EditSystemDialog system={system} />}
                           </div>
                         </div>
                       ))}

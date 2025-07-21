@@ -4,7 +4,7 @@ import type { InferSelectModel } from "drizzle-orm";
 import { CheckIcon, LoaderCircleIcon, LoaderIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ozef from "ozef";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ComponentPropsWithoutRef } from "react";
 import { toast } from "sonner";
 import { useDebouncedCallback } from "use-debounce";
 import { z } from "zod";
@@ -119,7 +119,13 @@ const ApplicationForm = ({
 
   const router = useRouter();
 
-  return (
+  // maybe
+  type Data = Parameters<
+    NonNullable<
+      ComponentPropsWithoutRef<typeof InnerApplicationForm>["onSubmit"]
+    >
+  >[0];
+  const Form = (
     <InnerApplicationForm
       className="flex flex-col gap-4 pt-4"
       onSubmit={async () => {
@@ -263,6 +269,10 @@ const ApplicationForm = ({
       </div>
     </InnerApplicationForm>
   );
+
+  return Form;
 };
 
 export default ApplicationForm;
+// helper to extract the form data type
+// export type Data = ReturnType<typeof ApplicationForm>["_form"];

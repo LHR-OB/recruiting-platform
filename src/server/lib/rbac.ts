@@ -4,12 +4,7 @@ import { z } from "zod";
 import { userRoleEnum } from "../db/schema";
 
 // Enum for User Roles
-export const UserRoleSchema = z.enum([
-  "APPLICANT",
-  "MEMBER",
-  "TEAM_MANAGEMENT",
-  "ADMIN",
-]);
+export const UserRoleSchema = z.enum(userRoleEnum.enumValues);
 
 function strEnum<T extends string>(o: readonly T[]) {
   type A = Record<T, number>;
@@ -23,6 +18,7 @@ function strEnum<T extends string>(o: readonly T[]) {
 }
 
 export const UserRoleEnum = strEnum(userRoleEnum.enumValues);
+console.log(UserRoleEnum);
 export type UserRole = keyof typeof UserRoleEnum;
 
 const Action = ["read", "update", "create", "delete", "any"] as const;
@@ -57,13 +53,14 @@ export class UserRbac {
   public permissionForStaticResource(
     resource: string | undefined,
     action: Action,
+    type: "system" | "team" = "team",
   ) {
     if (!resource) return false;
 
     // total access
     if (this.permissions["*"]) return true;
 
-    if (resource === "*system" && this.permissions["*system"]) {
+    if (type === "system" && this.permissions["*system"]) {
       return ActionValue[this.permissions["*system"]] >= ActionValue[action];
     }
 
@@ -106,13 +103,14 @@ export function hasPermission(
   { user }: Session,
   resource: string | undefined,
   perm: Action,
+  type: "system" | "team" = "team",
 ) {
   if (!user || !resource) return false;
 
   const rbac = new UserRbac(user);
   rbacCache[user.id] = rbac;
 
-  return rbac.permissionForStaticResource(resource, perm);
+  return rbac.permissionForStaticResource(resource, perm, type);
 }
 
 export function isAtLeast(

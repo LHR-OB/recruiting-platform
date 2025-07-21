@@ -12,6 +12,7 @@ import {
   jsonb as pgJsonb,
 } from "drizzle-orm/pg-core";
 import type { AdapterAccount } from "next-auth/adapters";
+import type { Data } from "~/app/application/[applicationId]/_components/application-form";
 
 export const createTable = pgTableCreator((name) => `rp_${name}`);
 
@@ -259,7 +260,7 @@ export const applications = createTable(
       .notNull()
       .default("APPLICATION"),
     internalDecision: applicationStatusEnum(),
-    data: pgJsonb("data"), // JSON or text blob for application answers
+    data: pgJsonb("data").$type<Data>(), // JSON or text blob for application answers
     createdAt: pgTimestamp("createdAt", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),

@@ -59,14 +59,7 @@ const Page = async ({
     return notFound();
   }
 
-  const rbac = new UserRbac(session.user);
-
-  console.log("User permissions:", rbac);
-
-  if (
-    !rbac.permissionForStaticResource(session.user.teamId, "update") &&
-    !rbac.permissionForStaticResource(session.user.systemId, "update")
-  ) {
+  if (!isAtLeast(session.user.role, "SYSTEM_LEADER")) {
     return notFound();
   }
 
@@ -115,7 +108,7 @@ const Page = async ({
           </thead>
           <tbody>
             {users.map((user, index) => {
-              const canEdit = isAtLeast("SYSTEM_LEADER", session.user.role);
+              const canEdit = isAtLeast(session.user.role, "SYSTEM_LEADER");
 
               return (
                 <tr key={user.id}>

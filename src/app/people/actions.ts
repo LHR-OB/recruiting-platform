@@ -19,7 +19,7 @@ export async function updateUserRoleAndTeam({
   currentUserRole: UserRole;
   systemId?: string;
 }) {
-  if (!isAtLeast(role, currentUserRole)) {
+  if (!isAtLeast(currentUserRole, role)) {
     throw new Error("Insufficient permissions to update user role");
   }
 

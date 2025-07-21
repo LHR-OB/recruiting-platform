@@ -58,13 +58,16 @@ export default async function SystemPage({
       </div>
       <div className="absolute left-0 w-full border-b" />
       <div className="pt-4">
-        {(session && rbac.permissionForStaticResource(systemId, "update") && (
-          <Editor
-            systemId={systemId}
-            // stinks
-            content={(content as unknown as JSONContent) ?? ({} as JSONContent)}
-          />
-        )) ?? <ReadOnly content={content ?? ""} />}
+        {(session &&
+          rbac.permissionForStaticResource(systemId, "update", "system") && (
+            <Editor
+              systemId={systemId}
+              // stinks
+              content={
+                (content as unknown as JSONContent) ?? ({} as JSONContent)
+              }
+            />
+          )) ?? <ReadOnly content={content ?? ""} />}
       </div>
     </>
   );
