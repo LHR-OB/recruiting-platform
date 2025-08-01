@@ -40,12 +40,32 @@ const TeamPublicPage = async () => {
               <p className="text-muted-foreground">
                 The following systems are recruiting:
               </p>
-              {team.systems.map((system) => (
-                <div key={system.id} className="py-2">
-                  <p>{system.name}</p>
-                  <p className="text-muted-foreground">{system.description}</p>
-                </div>
-              ))}
+              <div className="flex flex-col gap-4 pt-2">
+                {team.systems.map((system) => (
+                  <Link
+                    href={"/systems/[systemId]"}
+                    as={{
+                      pathname: `/systems/${system.id}`,
+                    }}
+                    key={system.id}
+                    className={cn(
+                      buttonVariants({
+                        variant: "link",
+                      }),
+                      "w-fit py-2 pl-0",
+                    )}
+                  >
+                    <p className="">
+                      {system.name} <br />
+                      <span className="text-muted-foreground">
+                        {(system.description?.length ?? 0) > 0
+                          ? system.description
+                          : "No subsystems"}
+                      </span>
+                    </p>
+                  </Link>
+                ))}
+              </div>
             </div>
             <div className="pt-12 pb-4">
               <Link

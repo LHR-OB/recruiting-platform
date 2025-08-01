@@ -4,7 +4,12 @@ import type { InferSelectModel } from "drizzle-orm";
 import { CheckIcon, LoaderCircleIcon, LoaderIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ozef from "ozef";
-import { useMemo, useState, type ComponentPropsWithoutRef } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type ComponentPropsWithoutRef,
+} from "react";
 import { toast } from "sonner";
 import { useDebouncedCallback } from "use-debounce";
 import { z } from "zod";
@@ -61,7 +66,7 @@ const ApplicationForm = ({
             const words = s.split(" ");
             return words.length <= 150;
           }, "Must be 150 words or less"),
-          verification: z.boolean(),
+          verification: z.boolean().refine((v) => v, "Must be checked"),
         }),
         Input: Textarea,
         // eslint-disable-next-line
@@ -115,6 +120,10 @@ const ApplicationForm = ({
           .join("")
       : systemStrings[0];
 
+  let duplicateSystems = false;
+  if (systemStrings.length !== new Set(systemStrings).size)
+    duplicateSystems = true;
+
   const checkboxValue = InnerApplicationForm.Field.Verification.useValue();
 
   const router = useRouter();
@@ -122,7 +131,15 @@ const ApplicationForm = ({
   const Form = (
     <InnerApplicationForm
       className="flex flex-col gap-4 pt-4"
-      onSubmit={async () => {
+      onSubmit={async (_, { setError }) => {
+        console.log(duplicateSystems);
+        if (duplicateSystems) {
+          setError("system3", "System preferences cannot have duplicates");
+          return;
+        } else {
+          setError("system3", "");
+        }
+
         await submitApplication();
 
         toast("Successfully submitted application", {
@@ -224,6 +241,7 @@ const ApplicationForm = ({
             </SelectContent>
           </Select>
         </div>
+        <InnerApplicationForm.Error.System3 />
       </div>
       <div className="space-y-2">
         <p>
@@ -258,6 +276,7 @@ const ApplicationForm = ({
           me.
         </p>
       </div>
+      <InnerApplicationForm.Error.Verification />
       <div>
         <InnerApplicationForm.Event.Submit disabled={disabled} />
       </div>

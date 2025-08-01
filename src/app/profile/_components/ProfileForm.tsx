@@ -5,21 +5,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { Upload, User, Mail, FileText } from "lucide-react";
+import { Upload, User, Mail, FileText, PhoneIcon } from "lucide-react";
 import type { User as UserType } from "next-auth";
 import { updateProfile, uploadResume } from "../actions";
 import { UploadButton } from "~/app/people/_components/upload-things";
 import Link from "next/link";
 
 interface ProfileFormProps {
-  user: UserType;
+  user: UserType & {
+    phoneNumber?: string | null;
+  };
   resumeUrl?: string | null;
 }
 
 export function ProfileForm({ user, resumeUrl }: ProfileFormProps) {
   const [name, setName] = useState(user.name ?? "");
   const [email, setEmail] = useState(user.email ?? "");
-  const [isUploading, setIsUploading] = useState(false);
+  const [number, setNumber] = useState(user.phoneNumber ?? "");
   const [isSaving, setIsSaving] = useState(false);
   const [resumeFile, setResumeFile] = useState<string | null>(
     resumeUrl ?? null,
@@ -75,6 +77,22 @@ export function ProfileForm({ user, resumeUrl }: ProfileFormProps) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email address"
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">Phone Number</Label>
+            <div className="relative mt-1">
+              <PhoneIcon className="text-muted-foreground absolute top-3 left-3 h-4 w-4" />
+              <Input
+                id="phone"
+                type="tel"
+                pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" // Example pattern: XXX-XXX-XXXX
+                placeholder="e.g., 123-456-7890"
+                value={number}
+                onChange={(e) => setNumber(e.target.value)}
                 className="pl-10"
               />
             </div>
