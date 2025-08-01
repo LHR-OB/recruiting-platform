@@ -12,7 +12,6 @@ import {
   jsonb as pgJsonb,
 } from "drizzle-orm/pg-core";
 import type { AdapterAccount } from "next-auth/adapters";
-import type { Data } from "~/app/application/[applicationId]/_components/application-form";
 
 export const createTable = pgTableCreator((name) => `rp_${name}`);
 
@@ -260,7 +259,7 @@ export const applications = createTable(
       .notNull()
       .default("APPLICATION"),
     internalDecision: applicationStatusEnum(),
-    data: pgJsonb("data").$type<Data>(), // JSON or text blob for application answers
+    data: pgJsonb("data"), // JSON or text blob for application answers
     createdAt: pgTimestamp("createdAt", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -318,6 +317,14 @@ export const availabilities = createTable(
   ],
 );
 
+export const interviewStatusEnum = pgEnum("interview_status_enum", [
+  "SCHEDULED",
+  "IN_PROGRESS",
+  "COMPLETED",
+  "CANCELLED",
+  "NO_SHOW",
+]);
+
 export const interviews = createTable(
   "interview",
   (_) => ({
@@ -331,6 +338,14 @@ export const interviews = createTable(
       () => applications.id,
       { onDelete: "set null" },
     ),
+    systemId: pgVarchar("systemId", { length: 255 })
+      .notNull()
+      .references(() => systems.id, { onDelete: "cascade" }),
+    scheduledAt: pgTimestamp("scheduledAt", { withTimezone: true }).notNull(),
+    duration: pgInteger("duration").default(30).notNull(), // Duration in minutes
+    status: interviewStatusEnum("status").default("SCHEDULED").notNull(),
+    location: pgVarchar("location", { length: 255 }),
+    notes: pgText("notes"),
     createdById: pgVarchar("createdById", { length: 255 })
       .notNull()
       .references(() => users.id, { onDelete: "restrict" }),
@@ -345,6 +360,7 @@ export const interviews = createTable(
     index("interview_event_idx").on(t.eventId),
     index("interview_application_idx").on(t.applicationId),
     index("interview_created_by_idx").on(t.createdById),
+    index("interview_scheduled_at_idx").on(t.scheduledAt),
   ],
 );
 
@@ -388,6 +404,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   }),
   usersToEvents: many(usersToEvents),
   usersToSystems: many(usersToSystems),
+  applications: many(applications),
 }));
 
 export const messagesRelations = relations(messages, ({ one }) => ({
@@ -519,6 +536,10 @@ export const interviewsRelations = relations(interviews, ({ one, many }) => ({
   application: one(applications, {
     fields: [interviews.applicationId],
     references: [applications.id],
+  }),
+  system: one(systems, {
+    fields: [interviews.systemId],
+    references: [systems.id],
   }),
   createdBy: one(users, {
     fields: [interviews.createdById],

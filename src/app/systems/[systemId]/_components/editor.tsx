@@ -22,7 +22,6 @@ const Editor = ({
   const onUpdate = useDebouncedCallback(
     ({ editor }: EditorEvents["update"]) => {
       const content = editor.getJSON();
-      console.log(content);
       updateContentMutation.mutate({
         id: systemId,
         mdx: JSON.stringify(content),

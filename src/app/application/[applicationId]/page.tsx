@@ -6,6 +6,10 @@ import ApplicationForm from "./_components/application-form";
 import { auth } from "~/server/auth";
 import { applications } from "~/server/db/schema";
 import { eq } from "drizzle-orm";
+import Rejected from "./_components/rejected";
+import Link from "next/link";
+import { cn } from "~/lib/utils";
+import { buttonVariants } from "~/components/ui/button";
 
 const AppPage = async ({
   params,
@@ -29,8 +33,6 @@ const AppPage = async ({
 
   if (!application) return notFound();
 
-  console.log(application.cycle.stage !== "APPLICATION");
-
   return (
     <>
       <div className="pb-6">
@@ -44,48 +46,92 @@ const AppPage = async ({
         </p>
       </div>
       <div className="absolute left-0 w-full border-b" />
-      <ApplicationForm
-        initial={application.data as object}
-        status={application.status}
-        teamSystems={application.team.systems}
-        disabled={application.cycle.stage !== "APPLICATION"}
-        updateAppAction={async function (json: string) {
-          "use server";
+      {application.cycle.stage === "APPLICATION" && (
+        <ApplicationForm
+          initial={application.data as object}
+          status={application.status}
+          teamSystems={application.team.systems}
+          disabled={application.cycle.stage !== "APPLICATION"}
+          updateAppAction={async function (json: string) {
+            "use server";
 
-          if (application.cycle.stage !== "APPLICATION") {
-            return;
-          }
+            if (application.cycle.stage !== "APPLICATION") {
+              return;
+            }
 
-          const session = await auth();
+            const session = await auth();
 
-          if (session?.user.id !== application.userId) return notFound();
+            if (session?.user.id !== application.userId) return notFound();
 
-          await db
-            .update(applications)
-            .set({
-              data: json,
-            })
-            .where(eq(applications.id, application.id));
-        }}
-        submitApplication={async function () {
-          "use server";
+            await db
+              .update(applications)
+              .set({
+                data: json,
+              })
+              .where(eq(applications.id, application.id));
+          }}
+          submitApplication={async function () {
+            "use server";
 
-          if (application.cycle.stage !== "APPLICATION") {
-            return;
-          }
+            if (application.cycle.stage !== "APPLICATION") {
+              return;
+            }
 
-          const session = await auth();
+            const session = await auth();
 
-          if (session?.user.id !== application.userId) return notFound();
+            if (session?.user.id !== application.userId) return notFound();
 
-          await db
-            .update(applications)
-            .set({
-              status: "SUBMITTED",
-            })
-            .where(eq(applications.id, application.id));
-        }}
-      />
+            await db
+              .update(applications)
+              .set({
+                status: "SUBMITTED",
+              })
+              .where(eq(applications.id, application.id));
+          }}
+        />
+      )}
+      {application.cycle.stage !== "APPLICATION" && (
+        <div className="pt-4">
+          {((application.status !== "ACCEPTED" &&
+            application.status !== "SUBMITTED") ||
+            application.cycle.stage !== application.internalStatus) && (
+            <Rejected />
+          )}
+          {application.status === "SUBMITTED" &&
+            application.cycle.stage === application.internalStatus && (
+              <div>
+                <p>
+                  Congratulations on progressing to the next stage of the
+                  application process!
+                </p>
+                <br />
+                {application.cycle.stage === "INTERVIEW" && (
+                  <>
+                    <p>
+                      As part of our next stage, we&apos;d like to invite you to
+                      interview with us!
+                    </p>
+                    <p>You may schedule your interview below</p>
+                    <Link
+                      className={cn(buttonVariants({}), "mt-4")}
+                      href={`/interview?applicationId=${application.id}`}
+                    >
+                      Schedule Interview
+                    </Link>
+                  </>
+                )}
+                {application.cycle.stage === "TRAIL" && (
+                  <>
+                    <p>
+                      As part of our next stage, we&apos;d like to invite you to
+                      do a mock trial with us!
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+        </div>
+      )}
     </>
   );
 };

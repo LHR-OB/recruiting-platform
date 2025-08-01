@@ -54,7 +54,7 @@ export function ProfileForm({ user, resumeUrl }: ProfileFormProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="name">Full Name</Label>
             <Input
               id="name"
@@ -65,8 +65,8 @@ export function ProfileForm({ user, resumeUrl }: ProfileFormProps) {
             />
           </div>
 
-          <div>
-            <Label htmlFor="email">Email Address</Label>
+          <div className="space-y-2">
+            <Label htmlFor="email">EID Email Address</Label>
             <div className="relative mt-1">
               <Mail className="text-muted-foreground absolute top-3 left-3 h-4 w-4" />
               <Input

@@ -41,19 +41,48 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   CheckIcon,
-  ChevronsUpDownIcon,
   PlusCircleIcon,
 } from "lucide-react";
 import { Input } from "~/components/ui/input";
 import { cn } from "~/lib/utils";
 import type { InferSelectModel } from "drizzle-orm";
-import type Applications from "recruiting-site-main/client/src/pages/Applications";
 import type { applications } from "~/server/db/schema";
+import {
+  atom,
+  createStore,
+  Provider,
+  useAtom,
+  type PrimitiveAtom,
+} from "jotai";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
+
+export const internalStatuses: Record<
+  InferSelectModel<typeof applications>["internalStatus"],
+  string
+> = {
+  PREPARATION: "Preparation",
+  APPLICATION: "Application",
+  INTERVIEW: "Interview",
+  TRAIL: "Trial",
+  FINAL: "Final",
+};
+
+export const internalDecisions: Record<
+  InferSelectModel<typeof applications>["status"],
+  string
+> = {
+  DRAFT: "Draft",
+  ACCEPTED: "Accepted",
+  REJECTED: "Rejected",
+  REVIEWED: "Reviewed",
+  SUBMITTED: "Submitted",
+};
+
+export const tableDataAtom = atom<InferSelectModel<typeof applications>[]>([]);
 
 export function DataTable<TData, TValue>({
   columns,
@@ -65,19 +94,10 @@ export function DataTable<TData, TValue>({
   const [rowSelection, setRowSelection] = useState({});
   const [open, setOpen] = useState(false);
   const [filters, setFilters] = useState<string[]>([]);
-
-  const statuses: Record<
-    InferSelectModel<typeof applications>["status"],
-    string
-  > = {
-    ACCEPTED: "Accepted",
-    REJECTED: "Rejected",
-    REVIEWED: "Reviewed",
-    SUBMITTED: "Submitted",
-  };
+  const [statefulData, setData] = useAtom(tableDataAtom);
 
   const table = useReactTable({
-    data,
+    data: statefulData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
@@ -133,7 +153,7 @@ export function DataTable<TData, TValue>({
                 <CommandList>
                   <CommandEmpty>No status found.</CommandEmpty>
                   <CommandGroup>
-                    {Object.entries(statuses).map(([key, label]) => (
+                    {Object.entries(internalDecisions).map(([key, label]) => (
                       <CommandItem
                         key={key}
                         value={key}
@@ -193,6 +213,11 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  onClick={() => row.toggleSelected()}
+                  className={cn(
+                    row.original?.internalDecision === "REJECTED" &&
+                      "opacity-50",
+                  )}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="h-10">
@@ -244,5 +269,19 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
     </div>
+  );
+}
+
+const store = createStore();
+
+export function TableWithProvider<TData, TValue>(
+  props: DataTableProps<TData, TValue>,
+) {
+  store.set(tableDataAtom, props.data);
+
+  return (
+    <Provider store={store}>
+      <DataTable {...props} />
+    </Provider>
   );
 }

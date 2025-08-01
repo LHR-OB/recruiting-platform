@@ -18,7 +18,7 @@ function strEnum<T extends string>(o: readonly T[]) {
 }
 
 export const UserRoleEnum = strEnum(userRoleEnum.enumValues);
-console.log(UserRoleEnum);
+
 export type UserRole = keyof typeof UserRoleEnum;
 
 const Action = ["read", "update", "create", "delete", "any"] as const;
@@ -33,14 +33,17 @@ export class UserRbac {
     } else if (user.role === "TEAM_MANAGEMENT") {
       this.permissions[user.teamId] = "any";
       this.permissions["*system"] = "any";
+      this.permissions["*application"] = "any";
       this.permissions.Users = "read";
     } else if (user.role === "SYSTEM_LEADER") {
       this.permissions[user.teamId] = "read";
       this.permissions[user.systemId ?? "bad"] = "update";
+      this.permissions["*application"] = "any";
       this.permissions.Users = "read";
     } else if (user.role === "MEMBER") {
       this.permissions[user.teamId] = "read";
       this.permissions[user.systemId ?? "bad"] = "read";
+      this.permissions["*application"] = "read";
     }
 
     if (user.role !== "APPLICANT" && user.role !== "ADMIN") {
@@ -97,8 +100,6 @@ export class UserRbac {
   }
 }
 
-const rbacCache: Record<string, UserRbac> = {};
-
 export function hasPermission(
   { user }: Session,
   resource: string | undefined,
@@ -108,7 +109,6 @@ export function hasPermission(
   if (!user || !resource) return false;
 
   const rbac = new UserRbac(user);
-  rbacCache[user.id] = rbac;
 
   return rbac.permissionForStaticResource(resource, perm, type);
 }

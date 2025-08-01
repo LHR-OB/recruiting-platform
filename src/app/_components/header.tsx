@@ -6,11 +6,13 @@ import { cn } from "~/lib/utils";
 import { auth, signIn } from "~/server/auth";
 import SignInDialog from "./sign-in-dialog";
 import { isAtLeast } from "~/server/lib/rbac";
+import { db } from "~/server/db";
+import { applications } from "~/server/db/schema";
+import { eq, and } from "drizzle-orm";
 
 const defaultLinks = {
   LHR: "/",
   Application: "/application",
-  // Events: "/events",
   Teams: "/teams/public",
 };
 

@@ -119,12 +119,6 @@ const ApplicationForm = ({
 
   const router = useRouter();
 
-  // maybe
-  type Data = Parameters<
-    NonNullable<
-      ComponentPropsWithoutRef<typeof InnerApplicationForm>["onSubmit"]
-    >
-  >[0];
   const Form = (
     <InnerApplicationForm
       className="flex flex-col gap-4 pt-4"
@@ -274,5 +268,3 @@ const ApplicationForm = ({
 };
 
 export default ApplicationForm;
-// helper to extract the form data type
-// export type Data = ReturnType<typeof ApplicationForm>["_form"];

@@ -83,8 +83,23 @@ export async function getOthersAvailabilities() {
 
 export async function getSystems() {
   await checkAccessPermissions();
+  const session = await auth();
 
-  const allSystems = await db.query.systems.findMany();
+  if (!session?.user?.teamId) {
+    throw new Error("User does not belong to a team");
+  }
+
+  const allSystems = await db.query.systems.findMany({
+    where: (s, { eq }) =>
+      session.user.role !== "ADMIN"
+        ? eq(s.teamId, session.user.teamId)
+        : undefined,
+    columns: {
+      id: true,
+      name: true,
+      description: true,
+    },
+  });
   return allSystems;
 }
 

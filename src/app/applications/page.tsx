@@ -3,8 +3,9 @@ import { auth } from "~/server/auth";
 import { hasPermission, isAtLeast } from "~/server/lib/rbac";
 import { getSystems, getTeams } from "../people/page";
 import { columns, type Application } from "./_components/columns";
-import { DataTable } from "./_components/data-table";
+import { DataTable, Table, TableWithProvider } from "./_components/data-table";
 import { db } from "~/server/db";
+import { moveApplicantToNextStage } from "./actions";
 
 const Page = async () => {
   const session = await auth();
@@ -25,8 +26,9 @@ const Page = async () => {
   const systems = await getSystems();
 
   let data = await db.query.applications.findMany({
-    where: (applications, { eq, and }) =>
+    where: (applications, { eq, and, ne }) =>
       and(
+        ne(applications.status, "DRAFT"),
         !isAtLeast(session.user.role, "ADMIN")
           ? eq(applications.teamId, session.user.teamId)
           : undefined,
@@ -37,6 +39,18 @@ const Page = async () => {
           id: true,
           name: true,
           email: true,
+          resumeUrl: true,
+        },
+        with: {
+          applications: {
+            with: {
+              team: {
+                columns: {
+                  name: true,
+                },
+              },
+            },
+          },
         },
       },
       team: {
@@ -45,13 +59,16 @@ const Page = async () => {
         },
       },
     },
+    orderBy: (applications, { asc, desc }) => [
+      asc(applications.internalStatus),
+      desc(applications.internalDecision),
+      asc(applications.createdAt),
+    ],
   });
 
   if (!isAtLeast(session.user.role, "ADMIN")) {
     data = data.filter((app) => app.teamId === session.user.teamId);
   }
-
-  console.log(data);
 
   if (!isAtLeast(session.user.role, "TEAM_MANAGEMENT")) {
     data = data.filter((app) =>
@@ -62,6 +79,15 @@ const Page = async () => {
       ].includes(session.user.systemId),
     );
   }
+
+  data = data.map((app) => ({
+    ...app,
+    otherApplications: app.user.applications.filter(
+      (otherApp) =>
+        app.applicationCycleId === otherApp.applicationCycleId &&
+        app.id !== otherApp.id,
+    ),
+  }));
 
   return (
     <>
@@ -80,10 +106,7 @@ const Page = async () => {
       </div>
       <div className="absolute left-0 container mx-auto border-b" />
       <div className="h-max pt-4">
-        <DataTable
-          columns={columns}
-          data={data.map((app) => ({ ...app, teamName: app.team.name }))}
-        />
+        <TableWithProvider columns={columns} data={data} />
       </div>
     </>
   );

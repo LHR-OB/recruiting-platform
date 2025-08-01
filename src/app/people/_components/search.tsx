@@ -13,7 +13,7 @@ const Search = () => {
 
   const cb = useDebouncedCallback((v: string) => {
     const params = new URLSearchParams(searchParams);
-    params.set("s", v);
+    params.set("s", v ?? "");
 
     router.replace(pathname + "?" + params.toString());
   }, 50);

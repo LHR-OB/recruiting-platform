@@ -24,7 +24,6 @@ async function createApplication(teamId: string) {
   }
 
   const currentCycle = await db.query.applicationCycles.findFirst({
-    where: (ac, { eq }) => eq(ac.stage, "APPLICATION"),
     orderBy: (ac, { desc }) => desc(ac.startDate),
   });
 
@@ -38,7 +37,7 @@ async function createApplication(teamId: string) {
         app.teamId === teamId && app.applicationCycleId === currentCycle?.id,
     )
   ) {
-    redirect(
+    return redirect(
       `/application/${
         userApplications.find(
           (e) =>
@@ -178,11 +177,10 @@ export default async function ApplicationsPage() {
                         <div className="text-muted-foreground flex grow justify-end gap-2">
                           {app && (
                             <span className="text-xs">
-                              {["DRAFT", "SUBMITTED", "REVIEWED"].includes(
-                                app.status,
-                              )
-                                ? `${app.status}`
-                                : "View Results"}
+                              {(cycle.stage !== "PREPARATION" &&
+                                cycle.stage !== "APPLICATION" &&
+                                "View Results") ||
+                                "Edit"}
                             </span>
                           )}
                           <ChevronRightIcon className="transition-transform group-hover:translate-x-0.5" />

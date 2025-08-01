@@ -1,25 +1,16 @@
-import { EllipsisVerticalIcon } from "lucide-react";
 import { notFound } from "next/navigation";
 import { Button } from "~/components/ui/button";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
 import { isAtLeast, UserRbac } from "~/server/lib/rbac";
 import Search from "./_components/search";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from "~/components/ui/dialog";
+
 import { updateUserRoleAndTeam } from "./actions";
 import { teams as teamsTable, userRoleEnum } from "~/server/db/schema";
 import { eq, type InferSelectModel } from "drizzle-orm";
 import UserRoleTeamForm from "./_components/UserRoleTeamForm";
 import { systems } from "../../server/db/schema";
+import SetCursor from "./_components/set-cursor";
 
 export async function getTeams() {
   "use cache";
@@ -49,7 +40,7 @@ const limit = 10;
 const Page = async ({
   searchParams,
 }: {
-  searchParams: Promise<{ cursor?: number; s?: string }>;
+  searchParams: Promise<{ cursor?: string; s?: string }>;
 }) => {
   const { cursor, s } = await searchParams;
 
@@ -71,8 +62,7 @@ const Page = async ({
           : undefined,
         s ? ilike(users.name, `%${s}%`) : undefined,
       ),
-    orderBy: (users, { asc }) => [asc(users.name)],
-    limit: limit + (cursor ?? 0),
+    orderBy: (users, { asc }) => [asc(users.createdAt)],
   });
 
   const teams = await getTeams();
@@ -83,6 +73,7 @@ const Page = async ({
 
   return (
     <>
+      <SetCursor cursor={Number(cursor ?? 0) + users.length} />
       <div className="pb-6">
         <h1 className="text-2xl font-medium">People Management</h1>
         <p className="text-muted-foreground">
@@ -102,7 +93,8 @@ const Page = async ({
               <th className="border-r px-2 py-2 font-normal">Name</th>
               <th className="border-r px-2 py-2 font-normal">Email</th>
               <th className="border-r px-2 py-2 font-normal">Role</th>
-              <th className="px-2 py-2 font-normal">Team</th>
+              <th className="border-r px-2 py-2 font-normal">Team</th>
+              <th className="px-2 py-2 font-normal">System</th>
               <th className="px-2 py-2 font-normal"></th>
             </tr>
           </thead>
@@ -118,45 +110,39 @@ const Page = async ({
                   <td className="border-r px-2 py-2">{user.name}</td>
                   <td className="border-r px-2 py-2">{user.email}</td>
                   <td className="border-r px-2 py-2">{user.role}</td>
-                  <td className="px-2 py-2">{idToNameMap.get(user.teamId!)}</td>
+
+                  <td className="border-r px-2 py-2">
+                    {idToNameMap.get(user.teamId!)}
+                  </td>
+                  <td className="px-2 py-2">
+                    {systems[user.teamId ?? ""]?.find(
+                      (sys) => sys.id === user.systemId,
+                    )?.name ?? "None"}
+                  </td>
+
                   <td className="w-4 px-2 py-2">
                     {canEdit && (
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="ghost">
-                            <EllipsisVerticalIcon />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Edit User</DialogTitle>
-                            <DialogDescription>
-                              Change the role and team for this user.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <UserRoleTeamForm
-                            user={user}
-                            teams={teams}
-                            systems={systems}
-                            roleOptions={roleOptions}
-                            session={session}
-                            onSubmit={async (formData) => {
-                              "use server";
-                              await updateUserRoleAndTeam({
-                                userId: user.id,
-                                role: formData.get(
-                                  "role",
-                                ) as (typeof userRoleEnum.enumValues)[number],
-                                teamId: formData.get("teamId") as string,
-                                currentUserRole: session.user.role,
-                                systemId: formData.get("systemId") as
-                                  | string
-                                  | undefined,
-                              });
-                            }}
-                          />
-                        </DialogContent>
-                      </Dialog>
+                      <UserRoleTeamForm
+                        user={user}
+                        teams={teams}
+                        systems={systems}
+                        roleOptions={roleOptions}
+                        session={session}
+                        onSubmit={async (formData) => {
+                          "use server";
+                          await updateUserRoleAndTeam({
+                            userId: user.id,
+                            role: formData.get(
+                              "role",
+                            ) as (typeof userRoleEnum.enumValues)[number],
+                            teamId: formData.get("teamId") as string,
+                            currentUserRole: session.user.role,
+                            systemId: formData.get("systemId") as
+                              | string
+                              | undefined,
+                          });
+                        }}
+                      />
                     )}
                   </td>
                 </tr>
