@@ -33,6 +33,7 @@ export function ProfileForm({ user, resumeUrl }: ProfileFormProps) {
       const formData = new FormData();
       formData.append("name", name);
       formData.append("email", email);
+      formData.append("phoneNumber", number);
 
       await updateProfile(formData);
     } catch (error) {
@@ -89,7 +90,6 @@ export function ProfileForm({ user, resumeUrl }: ProfileFormProps) {
               <Input
                 id="phone"
                 type="tel"
-                pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" // Example pattern: XXX-XXX-XXXX
                 placeholder="e.g., 123-456-7890"
                 value={number}
                 onChange={(e) => setNumber(e.target.value)}

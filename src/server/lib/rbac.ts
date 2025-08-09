@@ -121,3 +121,12 @@ export function isAtLeast(
     ? UserRoleEnum[actorRole] >= UserRoleEnum[requiredRole]
     : false;
 }
+
+export function isAtMaximum(
+  actorRole: UserRole | undefined,
+  requiredRole: UserRole,
+) {
+  return actorRole
+    ? UserRoleEnum[actorRole] <= UserRoleEnum[requiredRole]
+    : false;
+}

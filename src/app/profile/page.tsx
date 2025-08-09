@@ -27,7 +27,7 @@ export default async function ProfilePage() {
         </p>
       </div>
       <div className="absolute left-0 w-full border-b" />
-      <ProfileForm user={session.user} resumeUrl={user.resumeUrl} />
+      <ProfileForm user={user} resumeUrl={user.resumeUrl} />
     </>
   );
 }

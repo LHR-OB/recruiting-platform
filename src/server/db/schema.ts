@@ -49,6 +49,7 @@ export const users = createTable("user", (_) => ({
   resumeUrl: pgVarchar("resumeUrl", { length: 255 }), // Optional resume URL
   eidEmail: pgVarchar("eidEmail", { length: 255 }), // Optional EID email
   eidEmailVerified: pgBoolean("eidEmailVerified").default(false).notNull(), // EID email verification status
+  phonenNumber: pgVarchar("phoneNumber", { length: 20 }), // Optional phone number
 }));
 
 // Define teams table, referencing users.id

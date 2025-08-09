@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { auth } from "~/server/auth";
-import { hasPermission, isAtLeast } from "~/server/lib/rbac";
+import { hasPermission, isAtLeast, isAtMaximum } from "~/server/lib/rbac";
 import { getSystems, getTeams } from "../people/page";
 import { columns, type Application } from "./_components/columns";
 import { DataTable, Table, TableWithProvider } from "./_components/data-table";
@@ -70,13 +70,17 @@ const Page = async () => {
     data = data.filter((app) => app.teamId === session.user.teamId);
   }
 
-  if (!isAtLeast(session.user.role, "TEAM_MANAGEMENT")) {
+  const currentSystemName = systems[session.user.teamId]?.find(
+    (system) => system.id === session.user.systemId,
+  )?.name;
+
+  if (isAtMaximum(session.user.role, "SYSTEM_LEADER")) {
     data = data.filter((app) =>
       [
-        app.data?.system1 ?? "-1",
-        app.data?.system2 ?? "-1",
-        app.data?.system3 ?? "-1",
-      ].includes(session.user.systemId),
+        app.data?.system1 ?? "",
+        app.data?.system2 ?? "",
+        app.data?.system3 ?? "",
+      ].includes(currentSystemName!),
     );
   }
 

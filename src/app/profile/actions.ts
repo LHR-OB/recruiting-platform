@@ -10,7 +10,11 @@ import { z } from "zod";
 
 const updateProfileSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  email: z.string().email("Valid email is required"),
+  email: z
+    .string()
+    .email("Valid email is required")
+    .refine((s) => s.endsWith("@eid.utexas.edu")),
+  phoneNumber: z.string().max(20, "Phone number must be 20 characters or less"),
 });
 
 export async function updateProfile(formData: FormData) {
