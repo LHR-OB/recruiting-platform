@@ -1,4 +1,4 @@
-import { relations, sql } from "drizzle-orm";
+import { eq, relations, sql } from "drizzle-orm";
 import {
   index,
   pgTableCreator,
@@ -10,6 +10,8 @@ import {
   integer as pgInteger,
   pgEnum,
   jsonb as pgJsonb,
+  unique,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import type { AdapterAccount } from "next-auth/adapters";
 
@@ -24,33 +26,70 @@ export const userRoleEnum = pgEnum("user_role_enum", [
 ]);
 
 // Define users table first, without the teamId foreign key initially
-export const users = createTable("user", (_) => ({
-  id: pgVarchar("id", { length: 255 })
-    .notNull()
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  name: pgVarchar("name", { length: 255 }),
-  email: pgVarchar("email", { length: 255 }).notNull().unique(),
-  emailVerified: pgTimestamp("emailVerified", {
-    mode: "date",
-    withTimezone: true,
-  }).default(sql`CURRENT_TIMESTAMP`),
-  image: pgVarchar("image", { length: 255 }),
-  role: userRoleEnum("role").default("APPLICANT").notNull(),
-  system: pgVarchar("system", { length: 255 }),
-  systemId: pgVarchar("systemId", { length: 255 }),
-  teamId: pgVarchar("teamId", { length: 255 }), // Define as plain column first
-  createdAt: pgTimestamp("createdAt", { withTimezone: true })
-    .default(sql`CURRENT_TIMESTAMP`)
-    .notNull(),
-  updatedAt: pgTimestamp("updatedAt", { withTimezone: true }).$onUpdate(
-    () => new Date(),
-  ),
-  resumeUrl: pgVarchar("resumeUrl", { length: 255 }), // Optional resume URL
-  eidEmail: pgVarchar("eidEmail", { length: 255 }), // Optional EID email
-  eidEmailVerified: pgBoolean("eidEmailVerified").default(false).notNull(), // EID email verification status
-  phonenNumber: pgVarchar("phoneNumber", { length: 20 }), // Optional phone number
-}));
+export const users = createTable(
+  "user",
+  (_) => ({
+    id: pgVarchar("id", { length: 255 })
+      .notNull()
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    name: pgVarchar("name", { length: 255 }),
+    email: pgVarchar("email", { length: 255 }).notNull().unique(),
+    emailVerified: pgTimestamp("emailVerified", {
+      mode: "date",
+      withTimezone: true,
+    }).default(sql`CURRENT_TIMESTAMP`),
+    image: pgVarchar("image", { length: 255 }),
+    role: userRoleEnum("role").default("APPLICANT").notNull(),
+    system: pgVarchar("system", { length: 255 }),
+    systemId: pgVarchar("systemId", { length: 255 }),
+    teamId: pgVarchar("teamId", { length: 255 }), // Define as plain column first
+    createdAt: pgTimestamp("createdAt", { withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: pgTimestamp("updatedAt", { withTimezone: true }).$onUpdate(
+      () => new Date(),
+    ),
+    resumeUrl: pgVarchar("resumeUrl", { length: 255 }), // Optional resume URL
+    eidEmail: pgVarchar("eidEmail", { length: 255 }), // Optional EID email
+    eidEmailVerified: pgBoolean("eidEmailVerified").default(false).notNull(), // EID email verification status
+    phoneNumber: pgVarchar("phoneNumber", { length: 20 }), // Optional phone number
+  }),
+  (t) => ({
+    eidEmailVerifiedUnq: uniqueIndex("eid_email_verified_unique_idx")
+      .on(t.eidEmail)
+      .where(sql`${t.eidEmailVerified} = TRUE`),
+  }),
+);
+
+export const emailVerifications = createTable(
+  "email_verification",
+  (_) => ({
+    id: pgVarchar("id", { length: 255 })
+      .notNull()
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: pgVarchar("userId", { length: 255 })
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    token: pgVarchar("token", { length: 255 })
+      .notNull()
+      .$defaultFn(() => crypto.randomUUID()),
+    expires: pgTimestamp("expires", {
+      mode: "date",
+    })
+      .notNull()
+      .$defaultFn(() => {
+        const d = new Date();
+        d.setHours(d.getHours() + 1); // Token expires in 1 hour
+        return d;
+      }),
+  }),
+  (t) => [
+    index("email_verification_user_id_idx").on(t.userId),
+    index("email_verification_token_idx").on(t.token),
+  ],
+);
 
 // Define teams table, referencing users.id
 export const teams = createTable("team", (_) => ({
@@ -230,7 +269,7 @@ export const applicationCycleStages = createTable(
 
 export const applicationStatusEnum = pgEnum("application_status_enum", [
   "DRAFT",
-  "SUBMITTED",
+  "NEEDS_REVIEW",
   "REVIEWED",
   "ACCEPTED",
   "REJECTED",

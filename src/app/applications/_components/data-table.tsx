@@ -79,7 +79,7 @@ export const internalDecisions: Record<
   ACCEPTED: "Accepted",
   REJECTED: "Rejected",
   REVIEWED: "Reviewed",
-  SUBMITTED: "Submitted",
+  NEEDS_REVIEW: "Needs Review",
 };
 
 export const tableDataAtom = atom<InferSelectModel<typeof applications>[]>([]);

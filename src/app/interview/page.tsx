@@ -28,7 +28,7 @@ export default async function InterviewPage({
     where: (t, { eq, and }) =>
       and(
         eq(t.id, applicationId),
-        eq(t.status, "SUBMITTED"),
+        eq(t.status, "NEEDS_REVIEW"),
         eq(t.internalStatus, "INTERVIEW"),
       ),
     with: {

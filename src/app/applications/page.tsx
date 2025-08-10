@@ -2,8 +2,8 @@ import { notFound } from "next/navigation";
 import { auth } from "~/server/auth";
 import { hasPermission, isAtLeast, isAtMaximum } from "~/server/lib/rbac";
 import { getSystems, getTeams } from "../people/page";
-import { columns, type Application } from "./_components/columns";
-import { DataTable, Table, TableWithProvider } from "./_components/data-table";
+import { columns } from "./_components/columns";
+import { TableWithProvider } from "./_components/data-table";
 import { db } from "~/server/db";
 import { moveApplicantToNextStage } from "./actions";
 

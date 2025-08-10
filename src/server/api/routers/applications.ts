@@ -154,7 +154,7 @@ export const applicationsRouter = createTRPCRouter({
           teamId: input.teamId,
           systemId: input.systemId,
           applicationCycleId: currCycle.id,
-          status: "SUBMITTED",
+          status: "DRAFT",
           data: input.data,
         })
         .returning();

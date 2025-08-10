@@ -25,6 +25,8 @@ declare module "next-auth" {
       role: UserRole;
       teamId: string;
       systemId?: string;
+      eidEmail?: string;
+      eidEmailVerified: boolean;
       // ...other properties
       // role: UserRole;
     } & DefaultSession["user"];

@@ -262,7 +262,7 @@ export const columns: ColumnDef<Application>[] = [
                             if (app.id === original.id) {
                               return {
                                 ...app,
-                                status: "SUBMITTED", // Assuming status is set to SUBMITTED when moving to next stage
+                                status: "NEEDS_REVIEW",
                                 internalStatus: currStage,
                               };
                             }

@@ -27,6 +27,15 @@ const AppPage = async ({
           systems: true,
         },
       },
+      user: {
+        columns: {
+          id: true,
+          name: true,
+          email: true,
+          resumeUrl: true,
+          eidEmailVerified: true,
+        },
+      },
       cycle: true,
     },
   });
@@ -51,11 +60,17 @@ const AppPage = async ({
           initial={application.data as object}
           status={application.status}
           teamSystems={application.team.systems}
-          disabled={application.cycle.stage !== "APPLICATION"}
+          disabled={
+            application.cycle.stage !== "APPLICATION" ||
+            application.status === "NEEDS_REVIEW"
+          }
           updateAppAction={async function (json: string) {
             "use server";
 
-            if (application.cycle.stage !== "APPLICATION") {
+            if (
+              application.cycle.stage !== "APPLICATION" ||
+              application.status === "NEEDS_REVIEW"
+            ) {
               return;
             }
 
@@ -73,8 +88,25 @@ const AppPage = async ({
           submitApplication={async function () {
             "use server";
 
-            if (application.cycle.stage !== "APPLICATION") {
-              return;
+            if (
+              application.cycle.stage !== "APPLICATION" ||
+              application.status === "NEEDS_REVIEW"
+            ) {
+              throw new Error(
+                "Application is not in the correct state to be submitted.",
+              );
+            }
+
+            if (!!application.user.resumeUrl) {
+              throw new Error(
+                "You must upload your resume before submitting your application.",
+              );
+            }
+
+            if (!application.user.eidEmailVerified) {
+              throw new Error(
+                "You must verify your EID email before submitting your application.",
+              );
             }
 
             const session = await auth();
@@ -84,7 +116,7 @@ const AppPage = async ({
             await db
               .update(applications)
               .set({
-                status: "SUBMITTED",
+                status: "NEEDS_REVIEW",
               })
               .where(eq(applications.id, application.id));
           }}
@@ -93,11 +125,11 @@ const AppPage = async ({
       {application.cycle.stage !== "APPLICATION" && (
         <div className="pt-4">
           {((application.status !== "ACCEPTED" &&
-            application.status !== "SUBMITTED") ||
+            application.status !== "NEEDS_REVIEW") ||
             application.cycle.stage !== application.internalStatus) && (
             <Rejected />
           )}
-          {application.status === "SUBMITTED" &&
+          {application.status === "NEEDS_REVIEW" &&
             application.cycle.stage === application.internalStatus && (
               <div>
                 <p>

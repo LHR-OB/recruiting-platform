@@ -1,5 +1,5 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import { drizzle } from "drizzle-orm/neon-http";
+import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 
 import { env } from "~/env";
 import * as schema from "./schema";
@@ -9,11 +9,11 @@ import * as schema from "./schema";
  * update.
  */
 const globalForDb = globalThis as unknown as {
-  conn: postgres.Sql | undefined;
+  conn: NeonQueryFunction<false, false> | undefined;
 };
 
-const conn = globalForDb.conn ?? postgres(env.DATABASE_URL);
+const conn = globalForDb.conn ?? neon(env.DATABASE_URL);
 if (env.NODE_ENV !== "production") globalForDb.conn = conn;
 
-const db = drizzle(conn, { schema });
+const db = drizzle({ client: conn, schema });
 export { db, schema };

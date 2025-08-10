@@ -6,9 +6,12 @@ import { cn } from "~/lib/utils";
 import { auth, signIn } from "~/server/auth";
 import SignInDialog from "./sign-in-dialog";
 import { isAtLeast } from "~/server/lib/rbac";
-import { db } from "~/server/db";
-import { applications } from "~/server/db/schema";
-import { eq, and } from "drizzle-orm";
+import { TriangleAlert } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
 
 const defaultLinks = {
   LHR: "/",
@@ -90,7 +93,21 @@ const Header = async () => {
                 </Link>
               ))}
           </div>
-          <div>
+          <div className="flex items-center">
+            {!session?.user.eidEmailVerified && (
+              <Tooltip>
+                <TooltipTrigger>
+                  <TriangleAlert className="text-amber-400" size={16} />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-center text-sm">
+                    Your EID email is not verified.
+                    <br /> You cannot submit applications until your email is
+                    verified.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            )}
             {session ? (
               <Link
                 href="/profile"

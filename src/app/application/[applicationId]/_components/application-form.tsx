@@ -70,7 +70,7 @@ const ApplicationForm = ({
         }),
         Input: Textarea,
         // eslint-disable-next-line
-        defaults: { ...initial, verification: false } as any,
+        defaults: initial as any,
         Error: ({ error }) => <span className="text-destructive">{error}</span>,
         Submit: (props) => (
           <Button {...props}>{status === "DRAFT" ? "Submit" : "Save"}</Button>
@@ -132,7 +132,6 @@ const ApplicationForm = ({
     <InnerApplicationForm
       className="flex flex-col gap-4 pt-4"
       onSubmit={async (_, { setError }) => {
-        console.log(duplicateSystems);
         if (duplicateSystems) {
           setError("system3", "System preferences cannot have duplicates");
           return;
@@ -140,14 +139,27 @@ const ApplicationForm = ({
           setError("system3", "");
         }
 
-        await submitApplication();
+        try {
+          await submitApplication();
 
-        toast("Successfully submitted application", {
-          description: "Your application has been submitted successfully.",
-          position: "bottom-left",
-        });
-
-        router.refresh();
+          toast.success("Successfully submitted application", {
+            description: "Your application has been submitted successfully.",
+            position: "bottom-left",
+          });
+          router.refresh();
+        } catch (e) {
+          if (e instanceof Error) {
+            toast.error("Failed to submit application", {
+              description: e.message,
+              position: "bottom-left",
+            });
+          } else {
+            toast.error(
+              "An unexpected error occurred while submitting the application",
+              { position: "bottom-left" },
+            );
+          }
+        }
       }}
     >
       <div className="text-muted-foreground flex items-center gap-1">

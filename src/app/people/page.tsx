@@ -10,7 +10,6 @@ import { teams as teamsTable, userRoleEnum } from "~/server/db/schema";
 import { eq, type InferSelectModel } from "drizzle-orm";
 import UserRoleTeamForm from "./_components/UserRoleTeamForm";
 import { systems } from "../../server/db/schema";
-import SetCursor from "./_components/set-cursor";
 
 export async function getTeams() {
   "use cache";
@@ -36,13 +35,12 @@ export async function getSystems() {
   );
 }
 
-const limit = 10;
 const Page = async ({
   searchParams,
 }: {
-  searchParams: Promise<{ cursor?: string; s?: string }>;
+  searchParams: Promise<{ s?: string }>;
 }) => {
-  const { cursor, s } = await searchParams;
+  const { s } = await searchParams;
 
   const session = await auth();
 
@@ -73,7 +71,6 @@ const Page = async ({
 
   return (
     <>
-      <SetCursor cursor={Number(cursor ?? 0) + users.length} />
       <div className="pb-6">
         <h1 className="text-2xl font-medium">People Management</h1>
         <p className="text-muted-foreground">

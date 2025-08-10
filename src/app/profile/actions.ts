@@ -4,9 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
-import { users } from "~/server/db/schema";
+import { emailVerifications, users } from "~/server/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { transporter } from "../api/update/route";
 
 const updateProfileSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -26,13 +27,44 @@ export async function updateProfile(formData: FormData) {
   const validatedFields = updateProfileSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
+    phoneNumber: formData.get("phoneNumber"),
   });
 
   if (!validatedFields.success) {
     throw new Error("Invalid form data: " + validatedFields.error.message);
   }
 
-  const { name, email } = validatedFields.data;
+  const { name, email, phoneNumber } = validatedFields.data;
+
+  if (!email.endsWith("eid.utexas.edu")) {
+    throw new Error("Email must end with @eid.utexas.edu");
+  }
+
+  if (email && session.user.eidEmail !== email) {
+    await db
+      .update(users)
+      .set({
+        eidEmailVerified: false,
+      })
+      .where(eq(users.id, session.user.id));
+
+    const verificationInsert = await db
+      .insert(emailVerifications)
+      .values({
+        userId: session.user.id,
+      })
+      .returning();
+    const verification = verificationInsert[0]!;
+
+    const mailOptions = {
+      from: "Longhorn Racing Recruitment <longhornracingrecruitment@gmail.com>",
+      to: email,
+      subject: `LHR Recruiting Email Verification`,
+      text: `Please verify your email at https://recruiting.longhornracing.org/verify/${verification.token}`,
+    };
+
+    await transporter.sendMail(mailOptions);
+  }
 
   try {
     await db
@@ -40,6 +72,7 @@ export async function updateProfile(formData: FormData) {
       .set({
         name,
         email,
+        phoneNumber,
         updatedAt: new Date(),
       })
       .where(eq(users.id, session.user.id));

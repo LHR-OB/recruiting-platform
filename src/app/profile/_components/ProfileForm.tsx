@@ -10,6 +10,7 @@ import type { User as UserType } from "next-auth";
 import { updateProfile, uploadResume } from "../actions";
 import { UploadButton } from "~/app/people/_components/upload-things";
 import Link from "next/link";
+import { toast } from "sonner";
 
 interface ProfileFormProps {
   user: UserType & {
@@ -36,9 +37,14 @@ export function ProfileForm({ user, resumeUrl }: ProfileFormProps) {
       formData.append("phoneNumber", number);
 
       await updateProfile(formData);
+
+      toast.success(
+        "Profile updated successfully, you may need to reverify your eid email",
+        {},
+      );
     } catch (error) {
       console.error("Failed to update profile:", error);
-      alert(
+      toast.error(
         error instanceof Error ? error.message : "Failed to update profile",
       );
     } finally {
@@ -120,19 +126,18 @@ export function ProfileForm({ user, resumeUrl }: ProfileFormProps) {
             <UploadButton
               endpoint="resumeUploader"
               onClientUploadComplete={(file) => {
+                toast.success("Successfully uploaded resume", {
+                  position: "bottom-left",
+                });
                 if (file && file.length > 0) {
                   setResumeFile(file[0]!.ufsUrl);
                 }
               }}
             />
           </div>
-
           {resumeFile && (
             <div className="bg-muted flex items-center justify-between rounded-md p-3">
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                <Link href={resumeFile}>Current Resume</Link>
-              </div>
+              <embed src={resumeFile} className="h-[600px] w-full" />
             </div>
           )}
         </CardContent>
