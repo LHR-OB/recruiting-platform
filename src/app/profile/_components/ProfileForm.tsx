@@ -12,6 +12,8 @@ import { UploadButton } from "~/app/people/_components/upload-things";
 import Link from "next/link";
 import { toast } from "sonner";
 
+import { useRouter } from "next/navigation";
+
 interface ProfileFormProps {
   user: UserType & {
     phoneNumber?: string | null;
@@ -27,6 +29,8 @@ export function ProfileForm({ user, resumeUrl }: ProfileFormProps) {
   const [resumeFile, setResumeFile] = useState<string | null>(
     resumeUrl ?? null,
   );
+
+  const router = useRouter();
 
   const handleSaveProfile = async () => {
     setIsSaving(true);
@@ -126,9 +130,8 @@ export function ProfileForm({ user, resumeUrl }: ProfileFormProps) {
             <UploadButton
               endpoint="resumeUploader"
               onClientUploadComplete={(file) => {
-                toast.success("Successfully uploaded resume", {
-                  position: "bottom-left",
-                });
+                toast.success("Successfully uploaded resume", {});
+                void router.refresh();
                 if (file && file.length > 0) {
                   setResumeFile(file[0]!.ufsUrl);
                 }

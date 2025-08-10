@@ -13,13 +13,23 @@ const VerifyPage = async ({
     where: (t, { eq }) => eq(t.token, token),
   });
 
-  if (!verificationEmail) {
+  if (!token) {
     return (
       <div className="pb-6">
         <h1 className="text-2xl font-medium">Verify Email</h1>
         <p className="text-muted-foreground">
-          The verification link is invalid or has already been used.
+          No verification token provided. Please check your email for the
+          verification link.
         </p>
+      </div>
+    );
+  }
+
+  if (!verificationEmail) {
+    return (
+      <div className="pb-6">
+        <h1 className="text-2xl font-medium">Verify Email</h1>
+        <p className="text-muted-foreground">Your email is verified!</p>
       </div>
     );
   }

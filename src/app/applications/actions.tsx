@@ -72,7 +72,8 @@ export const rejectApplicant = async (applicationId: string) => {
     throw new Error("Application not found");
   }
 
-  db.update(applications)
+  await db
+    .update(applications)
     .set({
       internalDecision: "REJECTED",
       updatedAt: new Date(),

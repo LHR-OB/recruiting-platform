@@ -40,10 +40,13 @@ export async function updateProfile(formData: FormData) {
     throw new Error("Email must end with @eid.utexas.edu");
   }
 
+  console.log(email, session.user.eidEmail);
+
   if (email && session.user.eidEmail !== email) {
     await db
       .update(users)
       .set({
+        eidEmail: email,
         eidEmailVerified: false,
       })
       .where(eq(users.id, session.user.id));

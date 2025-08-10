@@ -27,6 +27,7 @@ declare module "next-auth" {
       systemId?: string;
       eidEmail?: string;
       eidEmailVerified: boolean;
+      resumeUrl?: string;
       // ...other properties
       // role: UserRole;
     } & DefaultSession["user"];

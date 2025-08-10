@@ -6,7 +6,7 @@ import { cn } from "~/lib/utils";
 import { auth, signIn } from "~/server/auth";
 import SignInDialog from "./sign-in-dialog";
 import { isAtLeast } from "~/server/lib/rbac";
-import { TriangleAlert } from "lucide-react";
+import { FileIcon, FileX2Icon, TriangleAlert } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -93,7 +93,21 @@ const Header = async () => {
                 </Link>
               ))}
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
+            {!session?.user.resumeUrl && (
+              <Tooltip>
+                <TooltipTrigger>
+                  <FileX2Icon className="text-amber-400" size={16} />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-center text-sm">
+                    You have not uploaded a resume.
+                    <br /> You cannot submit applications until you upload a
+                    resume.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            )}
             {!session?.user.eidEmailVerified && (
               <Tooltip>
                 <TooltipTrigger>
@@ -111,7 +125,10 @@ const Header = async () => {
             {session ? (
               <Link
                 href="/profile"
-                className={cn(buttonVariants({ variant: "link", size: "sm" }))}
+                className={cn(
+                  buttonVariants({ variant: "link", size: "sm" }),
+                  "pl-0",
+                )}
               >
                 {session.user.name ?? "Profile"}
               </Link>
