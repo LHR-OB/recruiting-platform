@@ -180,6 +180,7 @@ export default async function ApplicationsPage() {
                               {(cycle.stage !== "PREPARATION" &&
                                 cycle.stage !== "APPLICATION" &&
                                 "View Results") ||
+                                (app.status !== "DRAFT" && "Submitted") ||
                                 "Edit"}
                             </span>
                           )}

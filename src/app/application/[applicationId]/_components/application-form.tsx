@@ -35,11 +35,11 @@ const ApplicationForm = ({
   submitApplication,
 }: {
   initial: object;
-  updateAppAction: (json: string) => Promise<void>;
+  updateAppAction: (json: string) => Promise<string | void>;
   teamSystems: InferSelectModel<typeof systems>[];
   status: InferSelectModel<typeof applications>["status"];
   disabled: boolean;
-  submitApplication: () => Promise<void>;
+  submitApplication: () => Promise<string | void>;
 }) => {
   const InnerApplicationForm = useMemo(
     () =>
@@ -91,7 +91,10 @@ const ApplicationForm = ({
 
     void (async () => {
       setSaving(true);
-      await updateAppAction(JSON.stringify(fd));
+      const res = await updateAppAction(JSON.stringify(fd));
+      if (res) {
+        toast.error(res);
+      }
       setSaving(false);
     })();
   }, 500);
@@ -140,13 +143,17 @@ const ApplicationForm = ({
         }
 
         try {
-          await submitApplication();
+          const res = await submitApplication();
 
-          toast.success("Successfully submitted application", {
-            description: "Your application has been submitted successfully.",
-            position: "bottom-left",
-          });
-          router.refresh();
+          if (res) {
+            toast.error(res);
+          } else {
+            toast.success("Successfully submitted application", {
+              description: "Your application has been submitted successfully.",
+              position: "bottom-left",
+            });
+            router.refresh();
+          }
         } catch (e) {
           if (e instanceof Error) {
             toast.error("Failed to submit application", {
@@ -163,7 +170,11 @@ const ApplicationForm = ({
       }}
     >
       <div className="text-muted-foreground flex items-center gap-1">
-        <Badge className="mr-1">{status}</Badge>
+        <Badge className="mr-1">
+          {((status === "NEEDS_REVIEW" || status === "REVIEWED") &&
+            "SUBMITTED") ||
+            status}
+        </Badge>
         <span className="text-sm">{saving ? "Syncing" : "Synced"}</span>
         {saving ? (
           <LoaderCircleIcon className="h-3 w-3 animate-spin" />

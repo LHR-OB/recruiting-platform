@@ -9,6 +9,7 @@ import { type JSONContent } from "@tiptap/react";
 
 import { generateHTML } from "@tiptap/html";
 import StarterKit from "@tiptap/starter-kit";
+import { generateContent } from "~/app/systems/[systemId]/page";
 
 const TeamPage = async ({
   params,
@@ -26,14 +27,7 @@ const TeamPage = async ({
 
   const session = await auth();
 
-  let content: string;
-  try {
-    content = generateHTML(JSON.parse(team.mdx ?? "{}") as JSONContent, [
-      StarterKit,
-    ]);
-  } catch {
-    content = "";
-  }
+  const content = await generateContent(team.mdx);
 
   return (
     <>
@@ -44,7 +38,7 @@ const TeamPage = async ({
           // stinks
           content={(content as unknown as JSONContent) ?? ({} as JSONContent)}
         />
-      )) ?? <ReadOnly content={content} />}
+      )) || <ReadOnly content={content} />}
     </>
   );
 };

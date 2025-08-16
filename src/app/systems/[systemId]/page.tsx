@@ -7,12 +7,35 @@ import Image from "next/image";
 import { auth } from "~/server/auth";
 import { Button } from "~/components/ui/button";
 import Link from "next/link";
-import { generateHTML } from "@tiptap/html";
+import { generateHTML } from "@tiptap/html/server";
 import StarterKit from "@tiptap/starter-kit";
 import { type JSONContent } from "@tiptap/react";
 import Editor from "./_components/editor";
 import { hasPermission, UserRbac } from "~/server/lib/rbac";
 import ReadOnly from "~/app/teams/[teamId]/_components/read-only";
+
+async function getSystem(systemId: string) {
+  "use cache";
+
+  return await db.query.systems.findFirst({
+    where: eq(systems.id, systemId),
+    with: {
+      team: {
+        with: {
+          users: true,
+        },
+      },
+    },
+  });
+}
+
+export async function generateContent(mdx: string | null) {
+  "use cache";
+
+  return mdx
+    ? generateHTML(JSON.parse(mdx) as JSONContent, [StarterKit])
+    : null;
+}
 
 export default async function SystemPage({
   params,
@@ -27,28 +50,13 @@ export default async function SystemPage({
 
   const rbac = new UserRbac(session.user);
   const { systemId } = await params;
-  const system = await db.query.systems.findFirst({
-    where: eq(systems.id, systemId),
-    with: {
-      team: {
-        with: {
-          users: true,
-        },
-      },
-    },
-  });
+  const system = await getSystem(systemId);
 
   if (!system) {
     return notFound();
   }
 
-  const isTeamMember = system.team.users.some(
-    (user) => user.id === session?.user.id,
-  );
-
-  const content = system.mdx
-    ? generateHTML(JSON.parse(system.mdx) as JSONContent, [StarterKit])
-    : null;
+  const content = await generateContent(system.mdx);
 
   return (
     <>
@@ -62,12 +70,11 @@ export default async function SystemPage({
           rbac.permissionForStaticResource(systemId, "update", "system") && (
             <Editor
               systemId={systemId}
-              // stinks
               content={
                 (content as unknown as JSONContent) ?? ({} as JSONContent)
               }
             />
-          )) ?? <ReadOnly content={content ?? ""} />}
+          )) || <ReadOnly content={content} />}
       </div>
     </>
   );

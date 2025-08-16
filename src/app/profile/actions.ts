@@ -42,6 +42,7 @@ export async function updateProfile(formData: FormData) {
 
   console.log(email, session.user.eidEmail);
 
+  const needsToRevalidateEmail = !!(email && session.user.eidEmail !== email);
   if (email && session.user.eidEmail !== email) {
     await db
       .update(users)
@@ -81,7 +82,7 @@ export async function updateProfile(formData: FormData) {
       .where(eq(users.id, session.user.id));
 
     revalidatePath("/profile");
-    return { success: true };
+    return { success: true, needsToRevalidateEmail };
   } catch (error) {
     console.error("Failed to update profile:", error);
     throw new Error("Failed to update profile");

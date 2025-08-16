@@ -40,6 +40,7 @@ const Editor = ({
     ],
     content,
     onUpdate,
+    immediatelyRender: false,
   });
 
   return <EditorContent editor={editor} />;

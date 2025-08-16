@@ -1,6 +1,10 @@
 "use client";
 
-const ReadOnly = ({ content }: { content: string }) => {
+const ReadOnly = ({ content }: { content: string | null }) => {
+  if (!content) {
+    return null;
+  }
+
   return (
     <div
       dangerouslySetInnerHTML={{

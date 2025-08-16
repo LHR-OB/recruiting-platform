@@ -40,12 +40,16 @@ export function ProfileForm({ user, resumeUrl }: ProfileFormProps) {
       formData.append("email", email);
       formData.append("phoneNumber", number);
 
-      await updateProfile(formData);
+      const { needsToRevalidateEmail } = await updateProfile(formData);
 
-      toast.success(
-        "Profile updated successfully, you may need to reverify your eid email",
-        {},
-      );
+      if (needsToRevalidateEmail) {
+        toast.success(
+          "Profile updated successfully, you need to reverify your eid email",
+          {},
+        );
+      } else {
+        toast.success("Profile updated successfully", {});
+      }
     } catch (error) {
       console.error("Failed to update profile:", error);
       toast.error(

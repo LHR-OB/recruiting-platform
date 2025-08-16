@@ -92,21 +92,15 @@ const AppPage = async ({
               application.cycle.stage !== "APPLICATION" ||
               application.status === "NEEDS_REVIEW"
             ) {
-              throw new Error(
-                "Application is not in the correct state to be submitted.",
-              );
+              return "Application is not in the correct state to be submitted.";
             }
 
-            if (!!application.user.resumeUrl) {
-              throw new Error(
-                "You must upload your resume before submitting your application.",
-              );
+            if (!application.user.resumeUrl) {
+              return "You must upload your resume before submitting your application.";
             }
 
             if (!application.user.eidEmailVerified) {
-              throw new Error(
-                "You must verify your EID email before submitting your application.",
-              );
+              return "You must verify your EID email before submitting your application.";
             }
 
             const session = await auth();
