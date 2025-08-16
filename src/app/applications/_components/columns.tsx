@@ -330,22 +330,27 @@ export const columns: ColumnDef<Application>[] = [
                   <Select
                     value={original.internalStatus}
                     onValueChange={async (value) => {
-                      setRow((prev) => {
-                        return prev.map((app) => {
-                          if (app.id === original.id) {
-                            return {
-                              ...app,
-                              internalStatus: value as
-                                | InferSelectModel<
-                                    typeof applications
-                                  >["status"]
-                                | undefined,
-                            };
-                          }
-                          return app;
+                      const error = await setApplicantStage(original.id, value);
+
+                      if (error) {
+                        toast.error(error);
+                      } else {
+                        setRow((prev) => {
+                          return prev.map((app) => {
+                            if (app.id === original.id) {
+                              return {
+                                ...app,
+                                internalStatus: value as
+                                  | InferSelectModel<
+                                      typeof applications
+                                    >["status"]
+                                  | undefined,
+                              };
+                            }
+                            return app;
+                          });
                         });
-                      });
-                      await setApplicantStage(original.id, value);
+                      }
                     }}
                   >
                     <SelectTrigger className="h-8">
@@ -362,27 +367,30 @@ export const columns: ColumnDef<Application>[] = [
                   <Select
                     value={original.internalDecision}
                     onValueChange={async (value) => {
-                      setRow((prev) => {
-                        return prev.map((app) => {
-                          if (app.id === original.id) {
-                            return {
-                              ...app,
-                              internalDecision: value as
-                                | InferSelectModel<
-                                    typeof applications
-                                  >["status"]
-                                | undefined,
-                            };
-                          }
-                          return app;
-                        });
-                      });
-                      await setApplicantDecision(
+                      const error = await setApplicantDecision(
                         original.id,
-                        value as InferSelectModel<
-                          typeof applications
-                        >["internalDecision"],
+                        value,
                       );
+
+                      if (error) {
+                        toast.error(error);
+                      } else {
+                        setRow((prev) => {
+                          return prev.map((app) => {
+                            if (app.id === original.id) {
+                              return {
+                                ...app,
+                                internalDecision: value as
+                                  | InferSelectModel<
+                                      typeof applications
+                                    >["status"]
+                                  | undefined,
+                              };
+                            }
+                            return app;
+                          });
+                        });
+                      }
                     }}
                   >
                     <SelectTrigger className="h-8">
@@ -412,12 +420,12 @@ export const columns: ColumnDef<Application>[] = [
                     <p className="text-muted-foreground text-sm">
                       Teams Applied This Cycle
                     </p>
-                    <div className="flex gap-2">
-                      <Badge variant="secondary">{original.team.name}</Badge>
+                    <div className="flex flex-col gap-2">
                       {original.otherApplications.map((app) => {
                         return (
                           <Badge variant="secondary" key={app.id}>
-                            {app.team.name}
+                            {app.team.name} - {app.data.system1},{" "}
+                            {app.data.system2}, {app.data.system3}
                           </Badge>
                         );
                       })}

@@ -102,7 +102,7 @@ const Page = async () => {
           {session.user.role === "ADMIN" && "Longhorn Racing."}
           {session.user.role === "TEAM_MANAGEMENT" &&
             "the " + teamIdToName[session.user.teamId] + " team."}
-          {session.user.role === "SYSTEM_LEADER" &&
+          {isAtMaximum(session.user.role, "SYSTEM_LEADER") &&
             systems[session.user.teamId]?.find(
               (system) => system.id === session.user.systemId,
             )?.name + " system."}

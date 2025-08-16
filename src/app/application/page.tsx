@@ -102,7 +102,7 @@ export default async function ApplicationsPage() {
             cycle.endDate > new Date();
 
           return (
-            <div key={cycle.id} className="pt-4">
+            <div key={cycle.id} className="py-4">
               <div className="flex w-full items-center justify-between py-0.5">
                 <div className="flex gap-2">
                   <h2 className="text-lg font-medium">{cycle.name}</h2>
@@ -125,9 +125,9 @@ export default async function ApplicationsPage() {
                   a new application or edit your existing applications.
                 </p>
               )}
-              <div className="flex flex-col gap-2 pt-4">
-                {user.user.role === "APPLICANT" &&
-                  applications
+              {user.user.role === "APPLICANT" && (
+                <div className="flex flex-col gap-2 pt-4">
+                  {applications
                     .filter((app) => app.applicationCycleId === cycle.id)
                     .map(
                       (app) =>
@@ -188,9 +188,9 @@ export default async function ApplicationsPage() {
                         </div>
                       </CreateApplicationOrRedirect>
                     ))}
-                <div className="pt-6" />
-              </div>
-              <div className="absolute left-0 w-full border-b" />
+                </div>
+              )}
+              <div className="absolute left-0 w-full border-b pt-4" />
             </div>
           );
         })}

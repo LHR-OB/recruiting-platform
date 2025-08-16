@@ -94,7 +94,7 @@ const Header = async () => {
               ))}
           </div>
           <div className="flex items-center gap-2">
-            {!session?.user.resumeUrl && (
+            {session && !session.user.resumeUrl && (
               <Tooltip>
                 <TooltipTrigger>
                   <FileX2Icon className="text-amber-400" size={16} />
@@ -108,7 +108,7 @@ const Header = async () => {
                 </TooltipContent>
               </Tooltip>
             )}
-            {!session?.user.eidEmailVerified && (
+            {session && !session.user.eidEmailVerified && (
               <Tooltip>
                 <TooltipTrigger>
                   <TriangleAlert className="text-amber-400" size={16} />

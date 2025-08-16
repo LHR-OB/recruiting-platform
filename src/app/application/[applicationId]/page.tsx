@@ -111,6 +111,7 @@ const AppPage = async ({
               .update(applications)
               .set({
                 status: "NEEDS_REVIEW",
+                internalDecision: "NEEDS_REVIEW",
               })
               .where(eq(applications.id, application.id));
           }}
@@ -152,6 +153,30 @@ const AppPage = async ({
                       As part of our next stage, we&apos;d like to invite you to
                       do a mock trial with us!
                     </p>
+                    {application.team.name === "Solar" && (
+                      <Link
+                        className={cn(buttonVariants({}), "mt-4")}
+                        href={`https://forms.gle/Wot5StyzP9HCZtiN8`}
+                      >
+                        Schedule Solar Trial
+                      </Link>
+                    )}
+                    {application.team.name === "Combustion" && (
+                      <Link
+                        className={cn(buttonVariants({}), "mt-4")}
+                        href={`https://forms.gle/e2UZ7mdNdyjfENeG6`}
+                      >
+                        Schedule Combustion Trial
+                      </Link>
+                    )}
+                    {application.team.name === "Electric" && (
+                      <Link
+                        className={cn(buttonVariants({}), "mt-4")}
+                        href={`https://forms.gle/ytKMqDeAUkTYywuDA`}
+                      >
+                        Schedule Electric Trial
+                      </Link>
+                    )}
                   </>
                 )}
               </div>

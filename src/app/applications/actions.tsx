@@ -24,7 +24,7 @@ export const setApplicantStage = async (
   const session = await auth();
 
   if (!session || !hasPermission(session, "*application", "update")) {
-    throw new Error("User does not have permission to update applications");
+    return "User does not have permission to update applications";
   }
 
   await db
@@ -43,7 +43,7 @@ export const setApplicantDecision = async (
   const session = await auth();
 
   if (!session || !hasPermission(session, "*application", "update")) {
-    throw new Error("User does not have permission to update applications");
+    return "User does not have permission to update applications";
   }
 
   await db
@@ -65,11 +65,11 @@ export const rejectApplicant = async (applicationId: string) => {
   const session = await auth();
 
   if (!session || !hasPermission(session, "*application", "update")) {
-    throw new Error("User does not have permission to update applications");
+    return "User does not have permission to update applications";
   }
 
   if (!application) {
-    throw new Error("Application not found");
+    return "Application not found";
   }
 
   await db
@@ -79,8 +79,6 @@ export const rejectApplicant = async (applicationId: string) => {
       updatedAt: new Date(),
     })
     .where(eq(applications.id, applicationId));
-
-  return "Application rejected successfully";
 };
 
 export async function moveApplicantToNextStage(applicationId: string) {
@@ -94,7 +92,7 @@ export async function moveApplicantToNextStage(applicationId: string) {
   });
 
   if (!application) {
-    throw new Error("Application not found");
+    return "Application not found";
   }
 
   const nextStage = getNextStage(application.internalStatus);

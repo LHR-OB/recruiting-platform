@@ -80,6 +80,7 @@ export const internalDecisions: Record<
   REJECTED: "Rejected",
   REVIEWED: "Reviewed",
   NEEDS_REVIEW: "Needs Review",
+  WAITLISTED: "Waitlist",
 };
 
 export const tableDataAtom = atom<InferSelectModel<typeof applications>[]>([]);

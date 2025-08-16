@@ -1,4 +1,4 @@
-import { eq, relations, sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   index,
   pgTableCreator,
@@ -10,7 +10,6 @@ import {
   integer as pgInteger,
   pgEnum,
   jsonb as pgJsonb,
-  unique,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import type { AdapterAccount } from "next-auth/adapters";
@@ -271,6 +270,7 @@ export const applicationStatusEnum = pgEnum("application_status_enum", [
   "DRAFT",
   "NEEDS_REVIEW",
   "REVIEWED",
+  "WAITLISTED",
   "ACCEPTED",
   "REJECTED",
 ]);
