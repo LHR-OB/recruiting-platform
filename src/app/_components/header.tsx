@@ -15,8 +15,11 @@ import {
 
 const defaultLinks = {
   LHR: "/",
-  Application: "/application",
   Teams: "/teams/public",
+};
+
+const applicantLinks = {
+  Application: "/application",
 };
 
 const memberLinks = {
@@ -31,6 +34,7 @@ const managementLinks = {
 
 const adminLinks = {
   Cycles: "/cycles",
+  Blacklist: "/admin/blacklist",
 };
 
 async function signInAction() {
@@ -56,6 +60,18 @@ const Header = async () => {
                 {name}
               </Link>
             ))}
+            {isAtLeast(session?.user.role, "APPLICANT") &&
+              Object.entries(applicantLinks).map(([name, href]) => (
+                <Link
+                  key={name}
+                  href={href}
+                  className={cn(
+                    buttonVariants({ variant: "link", size: "sm" }),
+                  )}
+                >
+                  {name}
+                </Link>
+              ))}
             {isAtLeast(session?.user.role, "MEMBER") &&
               Object.entries(memberLinks).map(([name, href]) => (
                 <Link

@@ -4,6 +4,8 @@ import { db } from "~/server/db";
 import { blacklistedEids } from "~/server/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "~/server/auth";
+import { revalidatePath } from "next/cache";
+import { revalidateTag } from "next/cache";
 
 // Fetch all blacklisted EIDs
 export async function getBlacklist() {
@@ -26,6 +28,9 @@ export async function addToBlacklist(formData: FormData) {
     reason,
     createdBy: session.user.id,
   });
+
+  revalidatePath("/admin/blacklist");
+  revalidateTag("blacklist");
 }
 
 // Remove an EID from the blacklist
@@ -38,4 +43,7 @@ export async function removeFromBlacklist(formData: FormData) {
     throw new Error("Not authorized");
 
   await db.delete(blacklistedEids).where(eq(blacklistedEids.eid, eid));
+
+  revalidatePath("/admin/blacklist");
+  revalidateTag("blacklist");
 }

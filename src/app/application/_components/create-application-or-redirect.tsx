@@ -3,11 +3,9 @@ import { ChevronRightIcon } from "lucide-react";
 import { Button } from "~/components/ui/button";
 
 const CreateApplicationOrRedirect = ({
-  teamName,
   action,
   children,
 }: {
-  teamName: string;
   action: () => Promise<string | void>;
   children?: React.ReactNode;
 }) => {

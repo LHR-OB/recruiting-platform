@@ -140,7 +140,9 @@ export default async function ApplicationsPage() {
                       teams
                         .filter(
                           (team) =>
-                            !applications.some((app) => app.teamId === team.id),
+                            !applications.some(
+                              (app) => app.teamId === team.id,
+                            ) && cycle.stage === "APPLICATION",
                         )
                         .map((team) => ({
                           team,
@@ -165,7 +167,6 @@ export default async function ApplicationsPage() {
                     .map(({ team, app }) => (
                       <CreateApplicationOrRedirect
                         key={team.id}
-                        teamName={team.name}
                         action={async function () {
                           "use server";
                           return await createApplication(team.id);

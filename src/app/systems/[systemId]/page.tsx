@@ -7,16 +7,15 @@ import Image from "next/image";
 import { auth } from "~/server/auth";
 import { Button } from "~/components/ui/button";
 import Link from "next/link";
-import { generateHTML } from "@tiptap/html/server";
+import { generateHTML, generateJSON } from "@tiptap/html/server";
 import StarterKit from "@tiptap/starter-kit";
 import { type JSONContent } from "@tiptap/react";
 import Editor from "./_components/editor";
 import { hasPermission, UserRbac } from "~/server/lib/rbac";
 import ReadOnly from "~/app/teams/[teamId]/_components/read-only";
+import { unstable_cacheLife } from "next/cache";
 
 async function getSystem(systemId: string) {
-  "use cache";
-
   return await db.query.systems.findFirst({
     where: eq(systems.id, systemId),
     with: {
@@ -31,10 +30,13 @@ async function getSystem(systemId: string) {
 
 export async function generateContent(mdx: string | null) {
   "use cache";
+  unstable_cacheLife("days");
 
-  return mdx
-    ? generateHTML(JSON.parse(mdx) as JSONContent, [StarterKit])
-    : null;
+  if (!mdx) return ["", {} as JSONContent] as const;
+
+  const html = generateHTML(JSON.parse(mdx) as JSONContent, [StarterKit]);
+
+  return [html, generateJSON(html, [StarterKit])] as const;
 }
 
 export default async function SystemPage({
@@ -44,11 +46,7 @@ export default async function SystemPage({
 }) {
   const session = await auth();
 
-  if (!session) {
-    return notFound();
-  }
-
-  const rbac = new UserRbac(session.user);
+  const rbac = session ? new UserRbac(session.user) : undefined;
   const { systemId } = await params;
   const system = await getSystem(systemId);
 
@@ -56,7 +54,7 @@ export default async function SystemPage({
     return notFound();
   }
 
-  const content = await generateContent(system.mdx);
+  const [html, jsonContent] = await generateContent(system.mdx);
 
   return (
     <>
@@ -68,13 +66,8 @@ export default async function SystemPage({
       <div className="pt-4">
         {(session &&
           rbac.permissionForStaticResource(systemId, "update", "system") && (
-            <Editor
-              systemId={systemId}
-              content={
-                (content as unknown as JSONContent) ?? ({} as JSONContent)
-              }
-            />
-          )) || <ReadOnly content={content} />}
+            <Editor systemId={systemId} content={jsonContent} />
+          )) || <ReadOnly content={html} />}
       </div>
     </>
   );

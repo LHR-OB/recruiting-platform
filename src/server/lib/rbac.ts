@@ -91,7 +91,7 @@ export class UserRbac {
     return false;
   }
 
-  public async permissionForEditingTeamPage(teamId: string) {
+  public permissionForEditingTeamPage(teamId: string) {
     if (this.permissions["*"]) return true;
     if (this.permissions[teamId]?.includes("any")) return true;
     if (this.permissions[teamId]?.includes("update")) return true;

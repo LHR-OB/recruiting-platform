@@ -39,6 +39,7 @@ const Editor = ({
       }),
     ],
     content,
+    immediatelyRender: false,
     onUpdate,
   });
 

@@ -132,7 +132,9 @@ export const teamsRouter = createTRPCRouter({
         });
       }
 
-      if (!(await ctx.rbac.permissionForSystem(system.teamId))) {
+      if (
+        !ctx.rbac.permissionForStaticResource(system.id, "update", "system")
+      ) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You do not have permission to update this system.",

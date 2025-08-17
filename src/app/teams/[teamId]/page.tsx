@@ -3,12 +3,10 @@ import { auth } from "~/server/auth";
 import { db } from "~/server/db";
 
 import Editor from "./_components/editor";
-import { hasPermission } from "~/server/lib/rbac";
+import { hasPermission, UserRbac } from "~/server/lib/rbac";
 import ReadOnly from "./_components/read-only";
 import { type JSONContent } from "@tiptap/react";
 
-import { generateHTML } from "@tiptap/html";
-import StarterKit from "@tiptap/starter-kit";
 import { generateContent } from "~/app/systems/[systemId]/page";
 
 const TeamPage = async ({
@@ -26,19 +24,16 @@ const TeamPage = async ({
   }
 
   const session = await auth();
+  const rbac = session ? new UserRbac(session.user) : undefined;
 
-  const content = await generateContent(team.mdx);
+  const [html, json] = await generateContent(team.mdx);
 
   return (
     <>
       <h1 className="text-2xl font-medium">{team?.name}</h1>
-      {(session && hasPermission(session, teamId, "update") && (
-        <Editor
-          teamId={teamId}
-          // stinks
-          content={(content as unknown as JSONContent) ?? ({} as JSONContent)}
-        />
-      )) || <ReadOnly content={content} />}
+      {(rbac?.permissionForEditingTeamPage(teamId) && (
+        <Editor teamId={teamId} content={json} />
+      )) || <ReadOnly content={html} />}
     </>
   );
 };

@@ -5,7 +5,31 @@ import { getSystems, getTeams } from "../people/page";
 import { columns } from "./_components/columns";
 import { TableWithProvider } from "./_components/data-table";
 import { db } from "~/server/db";
-import { moveApplicantToNextStage } from "./actions";
+
+import { blacklistedEids, users } from "~/server/db/schema";
+import { eq, isNotNull, sql } from "drizzle-orm";
+import { unstable_cacheTag } from "next/cache";
+import { unstable_cacheLife } from "next/cache";
+
+async function getBlacklist() {
+  "use cache";
+
+  unstable_cacheTag("blacklist");
+  unstable_cacheLife("hours");
+
+  return await db
+    .select()
+    .from(users)
+    .rightJoin(
+      blacklistedEids,
+      // the first part of eidEmail is the eid before @
+      eq(
+        sql`substring(${users.eidEmail}, 1, position('@' in ${users.eidEmail}) - 1)`,
+        blacklistedEids.eid,
+      ),
+    )
+    .where(isNotNull(blacklistedEids.eid));
+}
 
 const Page = async () => {
   const session = await auth();
@@ -25,8 +49,10 @@ const Page = async () => {
 
   const systems = await getSystems();
 
+  const blacklist = await getBlacklist();
+
   let data = await db.query.applications.findMany({
-    where: (applications, { eq, and, ne, isNotNull, not }) =>
+    where: (applications, { eq, and, ne, isNotNull, notInArray }) =>
       and(
         ne(applications.status, "DRAFT"),
 
@@ -34,6 +60,13 @@ const Page = async () => {
 
         !isAtLeast(session.user.role, "ADMIN")
           ? eq(applications.teamId, session.user.teamId)
+          : undefined,
+
+        blacklist.length > 0
+          ? notInArray(
+              applications.userId,
+              blacklist.map((b) => b.user!.id),
+            )
           : undefined,
       ),
     with: {
