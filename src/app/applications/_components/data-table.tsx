@@ -52,6 +52,7 @@ import {
   createStore,
   Provider,
   useAtom,
+  useAtomValue,
   type PrimitiveAtom,
 } from "jotai";
 
@@ -87,20 +88,33 @@ export const tableDataAtom = atom<InferSelectModel<typeof applications>[]>([]);
 
 export function DataTable<TData, TValue>({
   columns,
-  data,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    {
+      id: "status",
+      desc: false,
+    },
+    {
+      id: "internalDecision",
+      desc: false,
+    },
+    {
+      id: "internalStatus",
+      desc: false,
+    },
+  ]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
   const [open, setOpen] = useState(false);
   const [filters, setFilters] = useState<string[]>([]);
-  const [statefulData, setData] = useAtom(tableDataAtom);
+  const statefulData = useAtomValue(tableDataAtom);
 
   const table = useReactTable({
     data: statefulData,
     columns,
     getCoreRowModel: getCoreRowModel(),
+
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getPaginationRowModel: getPaginationRowModel(),

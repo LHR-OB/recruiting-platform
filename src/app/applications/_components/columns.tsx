@@ -44,12 +44,12 @@ import {
   SheetClose,
 } from "~/components/ui/sheet";
 import { cn } from "~/lib/utils";
-import type {
-  applicationCycleStatusEnum,
-  applications,
+import { applicationCycleStatusEnum } from "~/server/db/schema";
+import {
   applicationStatusEnum,
-  teams,
-  users,
+  type applications,
+  type teams,
+  type users,
 } from "~/server/db/schema";
 import {
   internalStatuses,
@@ -183,7 +183,16 @@ export const columns: ColumnDef<Application>[] = [
         </Badge>
       );
     },
+    sortingFn: (rowA, rowB) => {
+      const a = applicationStatusEnum.enumValues.indexOf(
+        rowA.getValue("internalDecision"),
+      );
+      const b = applicationStatusEnum.enumValues.indexOf(
+        rowB.getValue("internalDecision"),
+      );
 
+      return a - b;
+    },
     filterFn: "includesString",
   },
   {
@@ -203,7 +212,7 @@ export const columns: ColumnDef<Application>[] = [
       );
     },
     cell: ({ row }) => {
-      const status: InferSelectModel<typeof applications>["status"] =
+      const status: InferSelectModel<typeof applications>["internalStatus"] =
         row.getValue("internalStatus");
 
       return (
@@ -212,6 +221,16 @@ export const columns: ColumnDef<Application>[] = [
           {status}
         </Badge>
       );
+    },
+    sortingFn: (rowA, rowB) => {
+      const a = applicationCycleStatusEnum.enumValues.indexOf(
+        rowA.getValue("internalStatus"),
+      );
+      const b = applicationCycleStatusEnum.enumValues.indexOf(
+        rowB.getValue("internalStatus"),
+      );
+
+      return a - b;
     },
     filterFn: "includesString",
   },
@@ -232,8 +251,10 @@ export const columns: ColumnDef<Application>[] = [
       );
     },
     cell: ({ row }) => {
-      const decision: InferSelectModel<typeof applications>["status"] =
-        row.getValue("internalDecision");
+      const decision: InferSelectModel<
+        typeof applications
+      >["internalDecision"] =
+        row.getValue("internalDecision") ?? row.getValue("status")!;
 
       return (
         <Badge variant="outline">
@@ -241,6 +262,16 @@ export const columns: ColumnDef<Application>[] = [
           {decision}
         </Badge>
       );
+    },
+    sortingFn: (rowA, rowB) => {
+      const a = applicationStatusEnum.enumValues.indexOf(
+        rowA.getValue("internalDecision"),
+      );
+      const b = applicationStatusEnum.enumValues.indexOf(
+        rowB.getValue("internalDecision"),
+      );
+
+      return a - b;
     },
     filterFn: "includesString",
   },
@@ -485,11 +516,10 @@ export const columns: ColumnDef<Application>[] = [
                       Teams Applied This Cycle
                     </p>
                     <div className="flex flex-col gap-2">
-                      {(original.otherApplications.filter(
-                        (app) => app.status !== "DRAFT",
-                      ).length &&
+                      {(original.otherApplications.filter((app) => app.data)
+                        .length &&
                         original.otherApplications
-                          .filter((app) => app.status !== "DRAFT")
+                          .filter((app) => app.data)
                           .map((app) => {
                             return (
                               <Badge variant="secondary" key={app.id}>

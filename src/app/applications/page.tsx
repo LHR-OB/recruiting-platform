@@ -26,9 +26,12 @@ const Page = async () => {
   const systems = await getSystems();
 
   let data = await db.query.applications.findMany({
-    where: (applications, { eq, and, ne }) =>
+    where: (applications, { eq, and, ne, isNotNull, not }) =>
       and(
         ne(applications.status, "DRAFT"),
+
+        isNotNull(applications.internalDecision),
+
         !isAtLeast(session.user.role, "ADMIN")
           ? eq(applications.teamId, session.user.teamId)
           : undefined,
