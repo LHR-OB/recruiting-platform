@@ -7,7 +7,7 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Upload, User, Mail, FileText, PhoneIcon } from "lucide-react";
 import type { User as UserType } from "next-auth";
-import { updateProfile, uploadResume } from "../actions";
+import { updateProfile } from "../actions";
 import { UploadButton } from "~/app/people/_components/upload-things";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -34,14 +34,18 @@ export function ProfileForm({ user, resumeUrl }: ProfileFormProps) {
 
   const handleSaveProfile = async () => {
     setIsSaving(true);
-    try {
-      const formData = new FormData();
-      formData.append("name", name);
-      formData.append("email", email);
-      formData.append("phoneNumber", number);
 
-      const { needsToRevalidateEmail } = await updateProfile(formData);
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("email", email);
+    formData.append("phoneNumber", number);
 
+    const { needsToRevalidateEmail, success, error } =
+      await updateProfile(formData);
+
+    if (!success) {
+      toast.error(error ?? "Failed to update profile");
+    } else {
       if (needsToRevalidateEmail) {
         toast.success(
           "Profile updated successfully, you need to reverify your eid email",
@@ -50,14 +54,9 @@ export function ProfileForm({ user, resumeUrl }: ProfileFormProps) {
       } else {
         toast.success("Profile updated successfully", {});
       }
-    } catch (error) {
-      console.error("Failed to update profile:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to update profile",
-      );
-    } finally {
-      setIsSaving(false);
     }
+
+    setIsSaving(false);
   };
 
   return (

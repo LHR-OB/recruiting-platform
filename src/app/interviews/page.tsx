@@ -1,24 +1,18 @@
 import { AvailabilityCalendar } from "./_components/AvailabilityCalendar";
-import {
-  getAvailabilities,
-  getSystems,
-  getOthersAvailabilities,
-} from "./actions";
+import { getAvailabilities, getSystems } from "./actions";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { AlertCircle } from "lucide-react";
 
 const Content = async () => {
   try {
-    const [availabilities, systems, othersAvailabilities] = await Promise.all([
+    const [availabilities, systems] = await Promise.all([
       getAvailabilities(),
       getSystems(),
-      getOthersAvailabilities(),
     ]);
 
     return (
       <AvailabilityCalendar
         initialAvailabilities={availabilities}
-        othersAvailabilities={othersAvailabilities}
         systems={systems}
       />
     );

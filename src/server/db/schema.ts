@@ -430,6 +430,16 @@ export const interviewNotes = createTable(
   ],
 );
 
+// Blacklist table for applicant EIDs
+export const blacklistedEids = createTable("blacklisted_eid", (_) => ({
+  eid: pgVarchar("eid", { length: 255 }).primaryKey(),
+  reason: pgText("reason"),
+  createdAt: pgTimestamp("createdAt", { withTimezone: true })
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  createdBy: pgVarchar("createdBy", { length: 255 }).notNull(),
+}));
+
 // RELATIONS
 export const usersRelations = relations(users, ({ many, one }) => ({
   accounts: many(accounts),

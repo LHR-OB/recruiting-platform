@@ -2,33 +2,37 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import type { InferSelectModel, InferSelectViewModel } from "drizzle-orm";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useSetAtom } from "jotai";
 import {
+  CheckIcon,
   ChevronDownIcon,
   ChevronsLeftIcon,
   ChevronsRightIcon,
   ChevronsUpDownIcon,
+  CircleQuestionMarkIcon,
   ChevronUpIcon,
+  CircleCheckIcon,
+  CircleDashedIcon,
+  CircleSlashIcon,
   Ellipsis,
   EllipsisIcon,
   ExternalLinkIcon,
+  EyeIcon,
   MoreHorizontalIcon,
   UserSearchIcon,
+  FileIcon,
+  LucideToolCase,
+  TrendingDownIcon,
+  SplitIcon,
+  MessagesSquareIcon,
+  NotepadTextIcon,
+  CircleIcon,
+  CircleDotDashedIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import type { z } from "zod";
+
 import { Badge } from "~/components/ui/badge";
 import { Button, buttonVariants } from "~/components/ui/button";
-import { Checkbox } from "~/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
 
 import {
   Sheet,
@@ -40,9 +44,14 @@ import {
   SheetClose,
 } from "~/components/ui/sheet";
 import { cn } from "~/lib/utils";
-import type { applications, teams, users } from "~/server/db/schema";
+import type {
+  applicationCycleStatusEnum,
+  applications,
+  applicationStatusEnum,
+  teams,
+  users,
+} from "~/server/db/schema";
 import {
-  appViewAtom,
   internalStatuses,
   internalDecisions,
   tableDataAtom,
@@ -62,6 +71,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { useState } from "react";
+
+const appStatusToIcon = {
+  NEEDS_REVIEW: <EyeIcon className="stroke-background fill-foreground" />,
+  ACCEPTED: <CircleCheckIcon className="stroke-background fill-green-500" />,
+  REJECTED: <CircleSlashIcon className="stroke-background fill-red-500" />,
+  WAITLISTED: <CircleDotDashedIcon className="stroke-foreground" />,
+  REVIEWED: <CircleDashedIcon className="stroke-foreground" />,
+} as Record<
+  (typeof applicationStatusEnum)["enumValues"][number],
+  React.ReactNode
+>;
+
+const appStageToIcon = {
+  APPLICATION: <FileIcon className="stroke-background fill-foreground" />,
+  TRAIL: <LucideToolCase className="stroke-background fill-foreground" />,
+  FINAL: <SplitIcon className="stroke-foreground" />,
+  INTERVIEW: (
+    <MessagesSquareIcon className="fill-foreground stroke-background" />
+  ),
+  PREPARATION: (
+    <NotepadTextIcon className="stroke-background fill-foreground" />
+  ),
+} as Record<
+  (typeof applicationCycleStatusEnum)["enumValues"][number],
+  React.ReactNode
+>;
 
 type App = InferSelectModel<typeof applications> & {
   team: Pick<InferSelectModel<typeof teams>, "name">;
@@ -123,12 +159,6 @@ export const columns: ColumnDef<Application>[] = [
   },
   {
     accessorKey: "status",
-    cell: ({ row }) => {
-      const status: InferSelectModel<typeof applications>["status"] =
-        row.getValue("status");
-
-      return <Badge variant="secondary">{status}</Badge>;
-    },
     header: ({ column }) => {
       return (
         <Button
@@ -142,6 +172,18 @@ export const columns: ColumnDef<Application>[] = [
         </Button>
       );
     },
+    cell: ({ row }) => {
+      const status: InferSelectModel<typeof applications>["status"] =
+        row.getValue("status");
+
+      return (
+        <Badge variant="outline">
+          {appStatusToIcon[status]}
+          {status}
+        </Badge>
+      );
+    },
+
     filterFn: "includesString",
   },
   {
@@ -160,6 +202,17 @@ export const columns: ColumnDef<Application>[] = [
         </Button>
       );
     },
+    cell: ({ row }) => {
+      const status: InferSelectModel<typeof applications>["status"] =
+        row.getValue("internalStatus");
+
+      return (
+        <Badge variant="outline">
+          {appStageToIcon[status]}
+          {status}
+        </Badge>
+      );
+    },
     filterFn: "includesString",
   },
   {
@@ -176,6 +229,17 @@ export const columns: ColumnDef<Application>[] = [
           Internal Decision
           <ChevronsUpDownIcon />
         </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const decision: InferSelectModel<typeof applications>["status"] =
+        row.getValue("internalDecision");
+
+      return (
+        <Badge variant="outline">
+          {appStatusToIcon[decision]}
+          {decision}
+        </Badge>
       );
     },
     filterFn: "includesString",
@@ -421,14 +485,19 @@ export const columns: ColumnDef<Application>[] = [
                       Teams Applied This Cycle
                     </p>
                     <div className="flex flex-col gap-2">
-                      {original.otherApplications.map((app) => {
-                        return (
-                          <Badge variant="secondary" key={app.id}>
-                            {app.team.name} - {app.data.system1},{" "}
-                            {app.data.system2}, {app.data.system3}
-                          </Badge>
-                        );
-                      })}
+                      {(original.otherApplications.filter(
+                        (app) => app.status !== "DRAFT",
+                      ).length &&
+                        original.otherApplications
+                          .filter((app) => app.status !== "DRAFT")
+                          .map((app) => {
+                            return (
+                              <Badge variant="secondary" key={app.id}>
+                                {app.team.name} - {app.data.system1},{" "}
+                                {app.data.system2}, {app.data.system3}
+                              </Badge>
+                            );
+                          })) || <span className="text-sm">None</span>}
                     </div>
                   </div>
                   <div className="space-y-1 space-x-2">

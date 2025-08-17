@@ -90,43 +90,52 @@ export async function getSystems() {
   }
 
   const allSystems = await db.query.systems.findMany({
-    where: (s, { eq }) =>
-      session.user.role !== "ADMIN"
-        ? eq(s.teamId, session.user.teamId)
-        : undefined,
+    where: (s, { eq }) => eq(s.teamId, session.user.teamId),
+
     columns: {
       id: true,
       name: true,
       description: true,
     },
   });
+
   return allSystems;
 }
 
-export async function createAvailability(formData: FormData) {
-  const { user } = await checkAccessPermissions();
+export async function createAvailability(
+  days: {
+    date: Date;
+    systemId: string;
+    startTime: Date;
+    endTime: Date;
+  }[],
+) {
+  try {
+    const { user } = await checkAccessPermissions();
 
-  const systemId = formData.get("systemId") as string;
-  const startDate = formData.get("startDate") as string;
-  const startTime = formData.get("startTime") as string;
-  const endTime = formData.get("endTime") as string;
+    await db.insert(availabilities).values(
+      days.map((day) => ({
+        userId: user.id,
+        systemId: day.systemId,
+        start: new Date(
+          day.date.toISOString().split("T")[0] +
+            "T" +
+            day.startTime.toISOString().split("T")[1],
+        ),
+        end: new Date(
+          day.date.toISOString().split("T")[0] +
+            "T" +
+            day.endTime.toISOString().split("T")[1],
+        ),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })),
+    );
 
-  if (!systemId || !startDate || !startTime || !endTime) {
-    throw new Error("All fields are required");
+    revalidatePath("/interviews");
+  } catch (e) {
+    return "Failed to create availability: " + e.message;
   }
-
-  // Combine date and time
-  const start = new Date(`${startDate}T${startTime}`);
-  const end = new Date(`${startDate}T${endTime}`);
-
-  await db.insert(availabilities).values({
-    userId: user.id,
-    systemId,
-    start,
-    end,
-  });
-
-  revalidatePath("/interviews");
 }
 
 export async function deleteAvailability(availabilityId: string) {
@@ -138,7 +147,7 @@ export async function deleteAvailability(availabilityId: string) {
   });
 
   if (!availability || availability.userId !== user.id) {
-    throw new Error("Availability not found or unauthorized");
+    return "Availability not found or unauthorized";
   }
 
   await db.delete(availabilities).where(eq(availabilities.id, availabilityId));

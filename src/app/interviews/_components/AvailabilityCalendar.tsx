@@ -20,13 +20,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog";
-import { Trash2, Edit, Plus } from "lucide-react";
-import { format } from "date-fns";
+import { Plus } from "lucide-react";
+import { format, isWithinInterval, parse } from "date-fns";
 import {
   createAvailability,
   deleteAvailability,
   updateAvailability,
 } from "../actions";
+import type { DateRange } from "react-day-picker";
+import { eachDayOfInterval } from "date-fns";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface System {
   id: string;
@@ -46,89 +50,57 @@ interface Availability {
   system?: System;
 }
 
-interface OthersAvailability {
-  id: string;
-  systemId: string;
-  start: Date;
-  end: Date;
-  system?: System;
-  user?: User;
-}
-
 export function AvailabilityCalendar({
   initialAvailabilities = [],
-  othersAvailabilities = [],
+
   systems = [],
 }: {
   initialAvailabilities?: Availability[];
-  othersAvailabilities?: OthersAvailability[];
+
   systems?: System[];
 }) {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const router = useRouter();
+
+  // Refactored: use range selection
+  const [selectedRange, setSelectedRange] = useState<DateRange | undefined>(
+    undefined,
+  );
+
   const [availabilities, setAvailabilities] = useState<Availability[]>(
     initialAvailabilities,
   );
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingAvailability, setEditingAvailability] =
     useState<Availability | null>(null);
 
-  // Get availabilities for the selected date
-  const selectedDateAvailabilities = selectedDate
-    ? availabilities.filter((avail) => {
-        const availDate = new Date(avail.start);
-        return (
-          availDate.getFullYear() === selectedDate.getFullYear() &&
-          availDate.getMonth() === selectedDate.getMonth() &&
-          availDate.getDate() === selectedDate.getDate()
-        );
-      })
-    : [];
+  // Get all days in the selected range
+  const daysInRange =
+    selectedRange?.from && selectedRange?.to
+      ? eachDayOfInterval({ start: selectedRange.from, end: selectedRange.to })
+      : [];
 
-  // Get dates that have availabilities from others (show dots on these dates)
-  const datesWithOthersAvailability = othersAvailabilities.map((avail) => {
+  // State for system and time selection (applies to all days)
+  const [selectedSystemId, setSelectedSystemId] = useState<string>("");
+  const [selectedStartTime, setSelectedStartTime] = useState<string>("09:00");
+  const [selectedEndTime, setSelectedEndTime] = useState<string>("17:00");
+
+  // Highlight days with user's own availability
+  const datesWithYourAvailability = availabilities.map((avail) => {
     const date = new Date(avail.start);
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
   });
 
-  // Get others' availability for the selected date (to show who's available)
-  const selectedDateOthersAvailability = selectedDate
-    ? othersAvailabilities.filter((avail) => {
-        const availDate = new Date(avail.start);
-        return (
-          availDate.getFullYear() === selectedDate.getFullYear() &&
-          availDate.getMonth() === selectedDate.getMonth() &&
-          availDate.getDate() === selectedDate.getDate()
-        );
-      })
-    : [];
-
-  const handleAddAvailability = async (formData: FormData) => {
-    if (!selectedDate) return;
-
-    const dateString = format(selectedDate, "yyyy-MM-dd");
-    formData.append("startDate", dateString);
-
-    try {
-      await createAvailability(formData);
-      setIsAddDialogOpen(false);
-      // In a real app, you'd refetch the data here
-      window.location.reload();
-    } catch (error) {
-      console.error("Failed to create availability:", error);
-    }
-  };
-
-  const handleDeleteAvailability = async (availabilityId: string) => {
-    try {
-      await deleteAvailability(availabilityId);
-      setAvailabilities((prev) =>
-        prev.filter((avail) => avail.id !== availabilityId),
-      );
-    } catch (error) {
-      console.error("Failed to delete availability:", error);
-    }
-  };
+  // Filter availabilities for selected range
+  const selectedRangeAvailabilities =
+    selectedRange?.from && selectedRange?.to
+      ? availabilities.filter((avail) =>
+          isWithinInterval(new Date(avail.start), {
+            start: selectedRange.from!,
+            end: selectedRange.to!,
+          }),
+        )
+      : [];
 
   const handleEditAvailability = async (formData: FormData) => {
     if (!editingAvailability) return;
@@ -137,7 +109,6 @@ export function AvailabilityCalendar({
       await updateAvailability(editingAvailability.id, formData);
       setIsEditDialogOpen(false);
       setEditingAvailability(null);
-      // In a real app, you'd refetch the data here
       window.location.reload();
     } catch (error) {
       console.error("Failed to update availability:", error);
@@ -145,205 +116,139 @@ export function AvailabilityCalendar({
   };
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      {/* Calendar */}
+    <div className="">
+      {/* Range Calendar */}
       <Card>
         <CardHeader>
-          <CardTitle>Select Date</CardTitle>
+          <CardTitle>Select Date Range</CardTitle>
         </CardHeader>
         <CardContent>
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            className="rounded-md border"
-            modifiers={{
-              hasOthersAvailability: datesWithOthersAvailability,
-            }}
-            modifiersStyles={{
-              hasOthersAvailability: {
-                position: "relative",
-              },
-            }}
-            modifiersClassNames={{
-              hasOthersAvailability:
-                "relative after:absolute after:bottom-1 after:left-1/2 after:h-1.5 after:w-1.5 after:-translate-x-1/2 after:rounded-full after:bg-primary",
-            }}
-          />
-          <div className="text-muted-foreground mt-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="bg-primary h-1.5 w-1.5 rounded-full"></div>
-              <span>Days when others are available for interviews</span>
+          <div className="flex flex-col gap-4 md:flex-row">
+            {/* Calendar Section */}
+            <div className="w-fit">
+              <Calendar
+                mode="range"
+                selected={selectedRange}
+                onSelect={setSelectedRange}
+                // days that already have your availability
+                disabled={(date) =>
+                  datesWithYourAvailability.some(
+                    (d) =>
+                      d.getFullYear() === date.getFullYear() &&
+                      d.getMonth() === date.getMonth() &&
+                      d.getDate() === date.getDate(),
+                  ) ||
+                  selectedRangeAvailabilities.some((avail) =>
+                    isWithinInterval(date, {
+                      start: new Date(avail.start),
+                      end: new Date(avail.end),
+                    }),
+                  )
+                }
+                className="rounded-md border [--cell-size:--spacing(10)]"
+                modifiers={{
+                  yourExistingAvailability: datesWithYourAvailability,
+                }}
+                modifiersStyles={{
+                  yourExistingAvailability: {
+                    position: "relative",
+                  },
+                }}
+                modifiersClassNames={{
+                  yourExistingAvailability:
+                    "relative after:absolute after:bottom-1 after:left-1/2 after:h-1.5 after:w-1.5 after:-translate-x-1/2 after:rounded-full after:bg-primary",
+                  today: "bg-none",
+                }}
+              />
+              <div className="text-muted-foreground mt-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="bg-primary h-1.5 w-1.5 rounded-full"></div>
+                  <span>Days when you are available for interviews</span>
+                </div>
+              </div>
+            </div>
+            {/* Availabilities Table Section */}
+            <div className="grow">
+              <div className="max-h-128 overflow-y-auto rounded-md border">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-muted/50 sticky top-0 z-10">
+                    <tr>
+                      <th className="px-4 py-2 text-left font-medium">
+                        System
+                      </th>
+                      <th className="px-4 py-2 text-left font-medium">Date</th>
+                      <th className="px-4 py-2 text-left font-medium">Time</th>
+                      <th className="px-4 py-2"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {availabilities.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={4}
+                          className="text-muted-foreground py-4 text-center"
+                        >
+                          You have no availabilities set.
+                        </td>
+                      </tr>
+                    ) : (
+                      availabilities.map((availability) => (
+                        <tr
+                          key={availability.id}
+                          className="border-b last:border-b-0"
+                        >
+                          <td className="px-4 py-2">
+                            {availability.system?.name ?? "Unknown System"}
+                          </td>
+                          <td className="px-4 py-2">
+                            {format(
+                              new Date(availability.start),
+                              "MMM dd, yyyy",
+                            )}
+                          </td>
+                          <td className="px-4 py-2">
+                            {format(new Date(availability.start), "HH:mm")} -{" "}
+                            {format(new Date(availability.end), "HH:mm")}
+                          </td>
+                          <td className="px-4 py-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={async () => {
+                                const res = await deleteAvailability(
+                                  availability.id,
+                                );
+
+                                if (res) {
+                                  toast.error(res);
+                                } else {
+                                  toast.success(
+                                    "Availability deleted successfully!",
+                                  );
+                                  setAvailabilities((prev) =>
+                                    prev.filter(
+                                      (a) => a.id !== availability.id,
+                                    ),
+                                  );
+                                  router.refresh();
+                                }
+                              }}
+                            >
+                              Delete
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Selected Date Availabilities */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>
-            {selectedDate
-              ? `Availability for ${format(selectedDate, "MMM dd, yyyy")}`
-              : "Select a date to view availability"}
-          </CardTitle>
-          {selectedDate && (
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>
-                    Add Availability for {format(selectedDate, "MMM dd, yyyy")}
-                  </DialogTitle>
-                </DialogHeader>
-                <form action={handleAddAvailability} className="space-y-4">
-                  <div>
-                    <Label htmlFor="systemId">System</Label>
-                    <Select name="systemId" required>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a system" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {systems.map((system) => (
-                          <SelectItem key={system.id} value={system.id}>
-                            {system.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="startTime">Start Time</Label>
-                      <Input
-                        name="startTime"
-                        type="time"
-                        required
-                        defaultValue="09:00"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="endTime">End Time</Label>
-                      <Input
-                        name="endTime"
-                        type="time"
-                        required
-                        defaultValue="17:00"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsAddDialogOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit">Add Availability</Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
-          )}
-        </CardHeader>
-        <CardContent>
-          {selectedDate ? (
-            <div className="space-y-6">
-              {/* Others' availability for this date */}
-              {selectedDateOthersAvailability.length > 0 && (
-                <div>
-                  <h3 className="text-foreground mb-3 text-sm font-medium">
-                    Others available on this date:
-                  </h3>
-                  <div className="space-y-2">
-                    {selectedDateOthersAvailability.map((availability) => (
-                      <div
-                        key={availability.id}
-                        className="bg-muted/50 rounded-lg border p-3"
-                      >
-                        <div className="flex-1">
-                          <div className="text-foreground font-medium">
-                            {availability.user?.name ?? "Unknown User"}
-                          </div>
-                          <div className="text-muted-foreground text-sm">
-                            {availability.system?.name ?? "Unknown System"} •{" "}
-                            {format(new Date(availability.start), "HH:mm")} -{" "}
-                            {format(new Date(availability.end), "HH:mm")}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Your availability for this date */}
-              <div>
-                <h3 className="text-foreground mb-3 text-sm font-medium">
-                  Your availability:
-                </h3>
-                {selectedDateAvailabilities.length > 0 ? (
-                  <div className="space-y-3">
-                    {selectedDateAvailabilities.map((availability) => (
-                      <div
-                        key={availability.id}
-                        className="flex items-center justify-between rounded-lg border p-3"
-                      >
-                        <div className="flex-1">
-                          <div className="font-medium">
-                            {availability.system?.name ?? "Unknown System"}
-                          </div>
-                          <div className="text-muted-foreground text-sm">
-                            {format(new Date(availability.start), "HH:mm")} -{" "}
-                            {format(new Date(availability.end), "HH:mm")}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setEditingAvailability(availability);
-                              setIsEditDialogOpen(true);
-                            }}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              handleDeleteAvailability(availability.id)
-                            }
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-muted-foreground py-4 text-center">
-                    No availability set for this date.
-                    <br />
-                    Click &quot;Add&quot; to set your availability.
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="text-muted-foreground py-8 text-center">
-              Select a date from the calendar to view or add availability.
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Selected Range Availabilities */}
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -396,6 +301,135 @@ export function AvailabilityCalendar({
           )}
         </DialogContent>
       </Dialog>
+      {/* Confirm Interview Availability Card */}
+      {daysInRange.length > 0 && (
+        <Card className="mt-6 gap-4">
+          <CardHeader>
+            <CardTitle>Confirm Interview Availability</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+
+                const payload = daysInRange.map((date) => ({
+                  date,
+                  systemId: selectedSystemId,
+                  startTime: parse(selectedStartTime, "HH:mm", new Date()),
+                  endTime: parse(selectedEndTime, "HH:mm", new Date()),
+                }));
+
+                const res = await createAvailability(payload);
+
+                if (res) {
+                  toast.error(res);
+                } else {
+                  toast.success("Availability confirmed successfully!");
+
+                  setSelectedRange(undefined);
+                  setSelectedSystemId("");
+                  setSelectedStartTime("09:00");
+                  setSelectedEndTime("17:00");
+                  setAvailabilities((prev) => [
+                    ...prev,
+                    ...payload.map((p) => ({
+                      id: `${p.date.toISOString()}-${p.systemId}`,
+                      systemId: p.systemId,
+                      system: {
+                        id: p.systemId,
+                        name: systems.find((s) => s.id === p.systemId)!.name,
+                      },
+                      start: new Date(
+                        p.date.getFullYear(),
+                        p.date.getMonth(),
+                        p.date.getDate(),
+                        p.startTime.getHours(),
+                        p.startTime.getMinutes(),
+                      ),
+                      end: new Date(
+                        p.date.getFullYear(),
+                        p.date.getMonth(),
+                        p.date.getDate(),
+                        p.endTime.getHours(),
+                        p.endTime.getMinutes(),
+                      ),
+                    })),
+                  ]);
+
+                  router.refresh();
+                }
+              }}
+              className="space-y-4"
+            >
+              <div className="flex flex-col gap-4 md:flex-row">
+                <div>
+                  <Label htmlFor="systemId" className="pb-2">
+                    System
+                  </Label>
+                  <Select
+                    value={selectedSystemId}
+                    onValueChange={setSelectedSystemId}
+                    required
+                    name="systemId"
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select system" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {systems.map((system) => (
+                        <SelectItem key={system.id} value={system.id}>
+                          {system.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="startTime" className="pb-2">
+                    Start Time
+                  </Label>
+                  <Input
+                    type="time"
+                    value={selectedStartTime}
+                    onChange={(e) => setSelectedStartTime(e.target.value)}
+                    required
+                    name="startTime"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="endTime" className="pb-2">
+                    End Time
+                  </Label>
+                  <Input
+                    type="time"
+                    value={selectedEndTime}
+                    onChange={(e) => setSelectedEndTime(e.target.value)}
+                    required
+                    step="1"
+                    name="endTime"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Days:</Label>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {daysInRange.map((date) => (
+                    <span
+                      key={date.toISOString()}
+                      className="bg-primary-foreground text-primary inline-block rounded-md border px-3 py-1 text-sm font-medium"
+                    >
+                      {format(date, "MMM dd, yyyy")}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="flex justify-end pt-4">
+                <Button type="submit">Confirm Availability</Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

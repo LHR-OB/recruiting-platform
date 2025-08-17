@@ -10,6 +10,8 @@ import Rejected from "./_components/rejected";
 import Link from "next/link";
 import { cn } from "~/lib/utils";
 import { buttonVariants } from "~/components/ui/button";
+import TrialWorkday from "./_components/trial-workday";
+import Waitlist from "./_components/waitlist";
 
 const AppPage = async ({
   params,
@@ -120,11 +122,16 @@ const AppPage = async ({
       {application.cycle.stage !== "APPLICATION" && (
         <div className="pt-4">
           {((application.status !== "ACCEPTED" &&
-            application.status !== "NEEDS_REVIEW") ||
+            application.status !== "NEEDS_REVIEW" &&
+            application.status !== "WAITLISTED") ||
             application.cycle.stage !== application.internalStatus) && (
-            <Rejected />
+            <Rejected
+              team={application.team.name}
+              name={application.user.name!}
+            />
           )}
           {application.status === "NEEDS_REVIEW" &&
+            application.internalDecision !== "WAITLISTED" &&
             application.cycle.stage === application.internalStatus && (
               <div>
                 <p>
@@ -148,39 +155,16 @@ const AppPage = async ({
                   </>
                 )}
                 {application.cycle.stage === "TRAIL" && (
-                  <>
-                    <p>
-                      As part of our next stage, we&apos;d like to invite you to
-                      do a mock trial with us!
-                    </p>
-                    {application.team.name === "Solar" && (
-                      <Link
-                        className={cn(buttonVariants({}), "mt-4")}
-                        href={`https://forms.gle/Wot5StyzP9HCZtiN8`}
-                      >
-                        Schedule Solar Trial
-                      </Link>
-                    )}
-                    {application.team.name === "Combustion" && (
-                      <Link
-                        className={cn(buttonVariants({}), "mt-4")}
-                        href={`https://forms.gle/e2UZ7mdNdyjfENeG6`}
-                      >
-                        Schedule Combustion Trial
-                      </Link>
-                    )}
-                    {application.team.name === "Electric" && (
-                      <Link
-                        className={cn(buttonVariants({}), "mt-4")}
-                        href={`https://forms.gle/ytKMqDeAUkTYywuDA`}
-                      >
-                        Schedule Electric Trial
-                      </Link>
-                    )}
-                  </>
+                  <TrialWorkday application={application} />
                 )}
               </div>
             )}
+          {application.status === "WAITLISTED" && (
+            <Waitlist
+              team={application.team.name}
+              name={application.user.name!}
+            />
+          )}
         </div>
       )}
     </>
