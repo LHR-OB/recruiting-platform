@@ -13,24 +13,18 @@ interface TimeSlot {
   start: Date;
   end: Date;
   available: boolean;
-  interviewerId?: string;
-  interviewerName?: string;
 }
 
 interface InterviewSchedulerProps {
   applicationId: string;
   teamId: string;
   systemId: string | null;
-  alreadyScheduled?: boolean;
-  isSolarApplicant?: boolean;
 }
 
 export function InterviewScheduler({
   applicationId,
   teamId,
   systemId,
-  alreadyScheduled = false,
-  isSolarApplicant = false,
 }: InterviewSchedulerProps) {
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
@@ -107,18 +101,6 @@ export function InterviewScheduler({
 
   return (
     <div className="space-y-6">
-      {isSolarApplicant && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-          <div className="text-sm text-blue-800">
-            <div className="font-medium">Solar System Applicant</div>
-            <div className="mt-1">
-              As a solar system applicant, you can schedule multiple interviews
-              across different solar teams if needed.
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="grid gap-6 md:grid-cols-2">
         {/* Calendar Selection */}
         <Card>
@@ -191,11 +173,6 @@ export function InterviewScheduler({
                           {format(slot.start, "h:mm a")} -{" "}
                           {format(slot.end, "h:mm a")}
                         </div>
-                        {slot.available && slot.interviewerName && (
-                          <div className="text-muted-foreground text-sm">
-                            with {slot.interviewerName}
-                          </div>
-                        )}
                       </div>
                       <div>
                         {slot.available ? (
@@ -242,11 +219,6 @@ export function InterviewScheduler({
                       {format(selectedSlot.start, "h:mm a")} to{" "}
                       {format(selectedSlot.end, "h:mm a")}
                     </p>
-                    {selectedSlot.interviewerName && (
-                      <p className="text-muted-foreground text-sm">
-                        Interviewer: {selectedSlot.interviewerName}
-                      </p>
-                    )}
                   </div>
 
                   <Button

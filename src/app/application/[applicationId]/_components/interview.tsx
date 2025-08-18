@@ -1,6 +1,18 @@
-const Interview = ({ team, name }: { team: string; name: string }) => {
+import Link from "next/link";
+import { buttonVariants } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
+
+const Interview = ({
+  team,
+  name,
+  appId,
+}: {
+  team: string;
+  name: string;
+  appId: string;
+}) => {
   return (
-    <div>
+    <div className="pt-4">
       {team === "Combustion" && (
         <p>
           Dear {name},<br />
@@ -40,24 +52,28 @@ const Interview = ({ team, name }: { team: string; name: string }) => {
       )}
       {team === "Solar" && (
         <p>
-          Dear <br />
-          <br />, Congratulations! You have been accepted into the next stage of
+          Dear {name}, <br />
+          <br /> Congratulations! You have been accepted into the next stage of
           the application process for Longhorn Racing Solar. We have reviewed
           your written application and have decided to move you forward to the
           interviewing process for the following systems: ________. <br />
           <br /> Should you choose to accept this, you will be interviewed for
           30 minutes by two members of our team. <br />
           <br />
-          Please check your recruitment portal for more information and submit a
-          time slot as soon as possible. <br />
+          Please schedule below! <br />
+          <Link
+            className={cn(buttonVariants({ size: "sm" }), "mt-1")}
+            href={`/interview?applicationId=${appId}`}
+          >
+            Schedule Interview
+          </Link>
+          <br />
           <br /> Thank you! We look forward to getting to know you better.
           Please let us know if you have questions or need clarification by
           messaging recruitment@longhornracing.com. <br />
           <br />
           Best, <br />
-          <br />
           Kayla Lee <br />
-          <br />
           Longhorn Racing Solar Team Captain
         </p>
       )}

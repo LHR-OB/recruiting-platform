@@ -76,7 +76,6 @@ export async function updateProfile(formData: FormData) {
     .update(users)
     .set({
       name,
-      email,
       phoneNumber,
       updatedAt: new Date(),
     })

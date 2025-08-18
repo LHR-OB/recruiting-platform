@@ -11,6 +11,12 @@ import {
 import { eq, and, gte, lte, or } from "drizzle-orm";
 import { addMinutes, startOfDay, endOfDay, isAfter } from "date-fns";
 import { auth } from "~/server/auth";
+import { transporter } from "../api/update/route";
+import ical, {
+  ICalAlarmType,
+  ICalAttendee,
+  ICalCalendarMethod,
+} from "ical-generator";
 
 interface TimeSlot {
   start: Date;
@@ -56,8 +62,6 @@ export async function getAvailableSlots(
       },
     },
   });
-
-  console.log(systemAvailabilities);
 
   const slots: TimeSlot[] = [];
 
@@ -105,15 +109,10 @@ export async function getAvailableSlots(
           );
         });
 
-        // Find the interviewer for this slot (the availability owner)
-        const interviewer = availability.user;
-
         slots.push({
           start: slotStart,
           end: slotEnd,
           available: !hasConflict,
-          interviewerId: interviewer.id,
-          interviewerName: interviewer.name ?? undefined,
         });
       }
 
@@ -229,6 +228,38 @@ export async function scheduleInterview(
     createdById: session.user.id,
   });
 
-  // Optionally, you could send an email notification here
-  // await sendInterviewConfirmationEmail(application, startTime, endTime);
+  const calendarEvent = ical({
+    name: `Longhorn Racing Recruitment Interview with ${application.team.name}`,
+    method: ICalCalendarMethod.REQUEST,
+  });
+
+  const event = calendarEvent.createEvent({
+    start: startTime,
+    end: endTime,
+    summary: `Interview for ${application.team.name}`,
+    description: `You have an interview scheduled for the ${application.team.name} team.`,
+    location: "Video Call", // Default location
+    organizer: {
+      name: "Longhorn Racing Recruitment",
+      email: "longhornracingrecruitment@gmail.com",
+    },
+  });
+
+  event.createAttendee(`${session.user.name!} <${session.user.email!}>}`);
+  event.createAlarm({
+    type: ICalAlarmType.email,
+    trigger: 30 * 60, // 30 minutes before
+  });
+
+  await transporter.sendMail({
+    from: "Longhorn Racing <longhornracingrecruitment@gmail.com>",
+    to: session.user.email!,
+    subject: `Application Update for ${application.team.name}`,
+    text: `Dear applicant,\n\nYour interview for the ${application.team.name} team has been scheduled.\n\nDate: ${startTime.toLocaleDateString()}\nTime: ${startTime.toLocaleTimeString()}\nDuration: 30 minutes\nLocation: Video Call\n\nSincerely,\nLonghorn Racing Recruitment\nhttps://recruiting.longhornracing.org/`,
+    icalEvent: {
+      filename: "interview.ics",
+      method: "request",
+      content: calendarEvent.toString(),
+    },
+  });
 }

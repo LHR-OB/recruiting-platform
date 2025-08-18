@@ -12,6 +12,8 @@ import { cn } from "~/lib/utils";
 import { buttonVariants } from "~/components/ui/button";
 import TrialWorkday from "./_components/trial-workday";
 import Waitlist from "./_components/waitlist";
+import Accepted from "./_components/accepted";
+import Interview from "./_components/interview";
 
 const AppPage = async ({
   params,
@@ -119,7 +121,26 @@ const AppPage = async ({
           }}
         />
       )}
-      {application.cycle.stage !== "APPLICATION" && (
+      {(application.status === "NEEDS_REVIEW" ||
+        application.status === "REVIEWED") &&
+        application.cycle.stage === "INTERVIEW" && (
+          <Interview
+            team={application.team.name}
+            name={application.user.name!}
+            appId={application.id}
+          />
+        )}
+      {application.status === "REJECTED" && (
+        <Rejected team={application.team.name} name={application.user.name!} />
+      )}
+      {application.status === "ACCEPTED" && (
+        <Accepted team={application.team.name} name={application.user.name!} />
+      )}
+      {application.status === "WAITLISTED" && (
+        <Waitlist team={application.team.name} name={application.user.name!} />
+      )}
+
+      {/*{application.cycle.stage !== "APPLICATION" && (
         <div className="pt-4">
           {((application.status !== "ACCEPTED" &&
             application.status !== "NEEDS_REVIEW" &&
@@ -166,7 +187,7 @@ const AppPage = async ({
             />
           )}
         </div>
-      )}
+      )}*/}
     </>
   );
 };

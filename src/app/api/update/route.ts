@@ -54,28 +54,6 @@ const GET = async () => {
           },
         });
 
-        await Promise.all(
-          applicationsInStage.map(async (application, i) => {
-            if (application.status === application.internalDecision) {
-              return;
-            }
-
-            await new Promise((resolve) => setTimeout(resolve, i * 500));
-
-            const mailOptions = {
-              from: "Longhorn Racing Recruitment <longhornracingrecruitment@gmail.com>",
-              to: application.user.email,
-              subject: `Application Update for ${application.team.name}`,
-
-              text: `Hello ${application.user.name},\n\nYour application for the ${application.team.name} team has been updated.\n\nBest regards,\nLonghorn Racing Recruitment Team`,
-            };
-
-            await transporter.sendMail(mailOptions).catch((error) => {
-              console.error("Error sending email:", error);
-            });
-          }),
-        );
-
         await db.batch([
           db
             .update(applicationCycles)
@@ -95,6 +73,28 @@ const GET = async () => {
             })
             .where(eq(applications.applicationCycleId, cycle.id)),
         ]);
+
+        await Promise.all(
+          applicationsInStage.map(async (application, i) => {
+            if (application.status === application.internalDecision) {
+              return;
+            }
+
+            await new Promise((resolve) => setTimeout(resolve, i * 750));
+
+            const mailOptions = {
+              from: "Longhorn Racing <longhornracingrecruitment@gmail.com>",
+              to: application.user.email,
+              subject: `Application Update for ${application.team.name}`,
+
+              text: `Dear ${application.user.name},\n\nYour application for the ${application.team.name} team has a new update.\n\nSincerely,\nLonghorn Racing\nhttps://recruiting.longhornracing.org/`,
+            };
+
+            await transporter.sendMail(mailOptions).catch((error) => {
+              console.error("Error sending email:", error);
+            });
+          }),
+        );
       }
     }
   }

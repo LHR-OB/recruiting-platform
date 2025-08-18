@@ -29,20 +29,16 @@ async function checkAccessPermissions() {
     );
   }
 
-  // Check if we're in the interview stage
   const now = new Date();
   const currentCycle = await db.query.applicationCycles.findFirst({
     where: and(
-      eq(applicationCycles.stage, "INTERVIEW"),
       lte(applicationCycles.startDate, now),
       gte(applicationCycles.endDate, now),
     ),
   });
 
   if (!currentCycle) {
-    throw new Error(
-      "Interview availability is only accessible during the interview stage of an active application cycle.",
-    );
+    throw new Error("No valid cycle");
   }
 
   return { user, currentCycle };
@@ -52,7 +48,8 @@ export async function getAvailabilities() {
   const { user } = await checkAccessPermissions();
 
   const userAvailabilities = await db.query.availabilities.findMany({
-    where: eq(availabilities.userId, user.id),
+    where: (t, { eq, and, gte }) =>
+      and(eq(t.userId, user.id), gte(t.start, new Date())),
     with: {
       system: true,
     },

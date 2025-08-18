@@ -91,10 +91,6 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([
     {
-      id: "status",
-      desc: false,
-    },
-    {
       id: "internalDecision",
       desc: false,
     },
@@ -179,10 +175,8 @@ export function DataTable<TData, TValue>({
                               : [...prev, currentValue];
 
                             table
-                              .getColumn("status")
-                              ?.setFilterValue(
-                                update.length > 0 ? update.join(",") : "",
-                              );
+                              .getColumn("internalDecision")
+                              ?.setFilterValue(update);
 
                             return update;
                           });

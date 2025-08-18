@@ -11,9 +11,14 @@ import { hasPermission } from "~/server/lib/rbac";
 
 type AppStage = (typeof applicationCycleStatusEnum)["enumValues"][number];
 
-function getNextStage(currentStage: AppStage) {
+function getNextStage(currentStage: AppStage, cycleStage: AppStage) {
   const e = applicationCycleStatusEnum.enumValues;
+  const cycleI = e.indexOf(cycleStage);
   const i = e.indexOf(currentStage);
+  if (i >= cycleI && cycleI + 1 < e.length) {
+    return e[cycleI + 1];
+  }
+
   return e[i + 1 < e.length ? i + 1 : i]!;
 }
 
@@ -95,7 +100,10 @@ export async function moveApplicantToNextStage(applicationId: string) {
     return "Application not found";
   }
 
-  const nextStage = getNextStage(application.internalStatus);
+  const nextStage = getNextStage(
+    application.internalStatus,
+    application.cycle.stage,
+  );
 
   await setApplicantStage(applicationId, nextStage);
 

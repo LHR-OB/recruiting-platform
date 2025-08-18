@@ -131,7 +131,9 @@ export function AvailabilityCalendar({
                 selected={selectedRange}
                 onSelect={setSelectedRange}
                 // days that already have your availability
+                // or in the past
                 disabled={(date) =>
+                  date < new Date() ||
                   datesWithYourAvailability.some(
                     (d) =>
                       d.getFullYear() === date.getFullYear() &&

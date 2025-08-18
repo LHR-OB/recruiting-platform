@@ -137,6 +137,18 @@ export default async function InterviewPage({
           </div>
         </div>
 
+        {isApplyingToSolar && (
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+            <div className="text-sm text-blue-800">
+              <div className="font-medium">Solar System Applicant</div>
+              <div className="mt-1">
+                As a solar system applicant, you can schedule multiple
+                interviews across different solar teams if needed.
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Show system selector if team has multiple systems */}
         <SystemSelector
           systems={teamSystems}
@@ -150,7 +162,6 @@ export default async function InterviewPage({
             applicationId={applicationId}
             teamId={application.teamId}
             systemId={selectedSystem.id}
-            isSolarApplicant={isApplyingToSolar}
           />
         ) : interviewForCurrentSystem ? (
           <ScheduledInterview
