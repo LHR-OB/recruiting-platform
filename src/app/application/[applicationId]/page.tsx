@@ -14,6 +14,7 @@ import TrialWorkday from "./_components/trial-workday";
 import Waitlist from "./_components/waitlist";
 import Accepted from "./_components/accepted";
 import Interview from "./_components/interview";
+import InReview from "./_components/in-review";
 
 const AppPage = async ({
   params,
@@ -59,135 +60,103 @@ const AppPage = async ({
         </p>
       </div>
       <div className="absolute left-0 w-full border-b" />
-      {application.cycle.stage === "APPLICATION" && (
-        <ApplicationForm
-          initial={application.data as object}
-          status={application.status}
-          teamSystems={application.team.systems}
-          disabled={
-            application.cycle.stage !== "APPLICATION" ||
-            application.status === "NEEDS_REVIEW"
-          }
-          updateAppAction={async function (json: string) {
-            "use server";
-
-            if (
+      <div className="pt-4">
+        {application.cycle.stage === "APPLICATION" && (
+          <ApplicationForm
+            initial={application.data as object}
+            status={application.status}
+            teamSystems={application.team.systems}
+            disabled={
               application.cycle.stage !== "APPLICATION" ||
               application.status === "NEEDS_REVIEW"
-            ) {
-              return;
             }
+            updateAppAction={async function (json: string) {
+              "use server";
 
-            const session = await auth();
+              if (
+                application.cycle.stage !== "APPLICATION" ||
+                application.status === "NEEDS_REVIEW"
+              ) {
+                return;
+              }
 
-            if (session?.user.id !== application.userId) return notFound();
+              const session = await auth();
 
-            await db
-              .update(applications)
-              .set({
-                data: json,
-              })
-              .where(eq(applications.id, application.id));
-          }}
-          submitApplication={async function () {
-            "use server";
+              if (session?.user.id !== application.userId) return notFound();
 
-            if (
-              application.cycle.stage !== "APPLICATION" ||
-              application.status === "NEEDS_REVIEW"
-            ) {
-              return "Application is not in the correct state to be submitted.";
-            }
+              await db
+                .update(applications)
+                .set({
+                  data: json,
+                })
+                .where(eq(applications.id, application.id));
+            }}
+            submitApplication={async function () {
+              "use server";
 
-            if (!application.user.resumeUrl) {
-              return "You must upload your resume before submitting your application.";
-            }
+              if (
+                application.cycle.stage !== "APPLICATION" ||
+                application.status === "NEEDS_REVIEW"
+              ) {
+                return "Application is not in the correct state to be submitted.";
+              }
 
-            if (!application.user.eidEmailVerified) {
-              return "You must verify your EID email before submitting your application.";
-            }
+              if (!application.user.resumeUrl) {
+                return "You must upload your resume before submitting your application.";
+              }
 
-            const session = await auth();
+              if (!application.user.eidEmailVerified) {
+                return "You must verify your EID email before submitting your application.";
+              }
 
-            if (session?.user.id !== application.userId) return notFound();
+              const session = await auth();
 
-            await db
-              .update(applications)
-              .set({
-                status: "NEEDS_REVIEW",
-                internalDecision: "NEEDS_REVIEW",
-              })
-              .where(eq(applications.id, application.id));
-          }}
-        />
-      )}
-      {(application.status === "NEEDS_REVIEW" ||
-        application.status === "REVIEWED") &&
-        application.cycle.stage === "INTERVIEW" && (
-          <Interview
-            team={application.team.name}
-            name={application.user.name!}
-            appId={application.id}
+              if (session?.user.id !== application.userId) return notFound();
+
+              await db
+                .update(applications)
+                .set({
+                  status: "NEEDS_REVIEW",
+                  internalDecision: "NEEDS_REVIEW",
+                })
+                .where(eq(applications.id, application.id));
+            }}
           />
         )}
-      {application.status === "REJECTED" && (
-        <Rejected team={application.team.name} name={application.user.name!} />
-      )}
-      {application.status === "ACCEPTED" && (
-        <Accepted team={application.team.name} name={application.user.name!} />
-      )}
-      {application.status === "WAITLISTED" && (
-        <Waitlist team={application.team.name} name={application.user.name!} />
-      )}
-
-      {/*{application.cycle.stage !== "APPLICATION" && (
-        <div className="pt-4">
-          {((application.status !== "ACCEPTED" &&
-            application.status !== "NEEDS_REVIEW" &&
-            application.status !== "WAITLISTED") ||
-            application.cycle.stage !== application.internalStatus) && (
-            <Rejected
-              team={application.team.name}
-              name={application.user.name!}
-            />
-          )}
-          {application.status === "NEEDS_REVIEW" &&
-            application.internalDecision !== "WAITLISTED" &&
-            application.cycle.stage === application.internalStatus && (
-              <div>
-                <p>
-                  Congratulations on progressing to the next stage of the
-                  application process!
-                </p>
-                <br />
-                {application.cycle.stage === "INTERVIEW" && (
-                  <>
-                    <p>
-                      As part of our next stage, we&apos;d like to invite you to
-                      interview with us!
-                    </p>
-                    <p>You may schedule your interview below</p>
-                    <Link
-                      className={cn(buttonVariants({}), "mt-4")}
-                      href={`/interview?applicationId=${application.id}`}
-                    >
-                      Schedule Interview
-                    </Link>
-                  </>
-                )}
-                {application.cycle.stage === "TRAIL" && (
-                  <TrialWorkday application={application} />
-                )}
-              </div>
+        {application.status === "NEEDS_REVIEW" && (
+          <>
+            {application.cycle.stage === "INTERVIEW" && (
+              <Interview
+                team={application.team.name}
+                name={application.user.name!}
+                appId={application.id}
+              />
             )}
-          {application.status === "WAITLISTED" && (
-            <Waitlist
-              team={application.team.name}
-              name={application.user.name!}
-            />
-          )}
-        </div>
-      )}*/}
+            {application.cycle.stage === "TRAIL" && (
+              <TrialWorkday team={application.team.name} />
+            )}
+            {application.cycle.stage === "FINAL"} && <InReview />
+          </>
+        )}
+        {application.status === "REJECTED" && (
+          <Rejected
+            team={application.team.name}
+            name={application.user.name!}
+          />
+        )}
+        {application.status === "ACCEPTED" && (
+          <Accepted
+            team={application.team.name}
+            name={application.user.name!}
+          />
+        )}
+        {application.status === "WAITLISTED" && (
+          <Waitlist
+            team={application.team.name}
+            name={application.user.name!}
+          />
+        )}
+      </div>
     </>
   );
 };

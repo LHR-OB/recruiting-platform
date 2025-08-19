@@ -12,7 +12,7 @@ const Interview = ({
   appId: string;
 }) => {
   return (
-    <div className="pt-4">
+    <div>
       {team === "Combustion" && (
         <p>
           Dear {name},<br />

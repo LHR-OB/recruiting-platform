@@ -20,7 +20,7 @@ const Content = async () => {
     const message =
       e instanceof Error ? e.message : "An unexpected error occurred.";
     return (
-      <Card className="border-destructive/50 bg-destructive/5">
+      <Card className="border-destructive/50 bg-destructive/50">
         <CardHeader>
           <CardTitle className="text-destructive flex items-center gap-2">
             <AlertCircle className="h-5 w-5" />
@@ -59,7 +59,10 @@ export default async function InterviewsPage() {
           </p>
         </div>
       </div>
-      <Content />
+      <div className="absolute left-0 w-full border-b" />
+      <div className="pt-4">
+        <Content />
+      </div>
     </main>
   );
 }

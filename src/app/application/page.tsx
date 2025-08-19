@@ -69,6 +69,7 @@ export default async function ApplicationsPage() {
 
   const cycles = await db.query.applicationCycles.findMany({
     orderBy: (ac, { asc }) => asc(ac.endDate),
+    where: (t, { ne }) => ne(t.stage, "PREPARATION"),
   });
 
   const applications = await db.query.applications.findMany({

@@ -31,6 +31,7 @@ import {
 } from "../actions";
 import { StageTimeline } from "./StageTimeline";
 import { cn } from "~/lib/utils";
+import { applicationCycleStatusEnum } from "~/server/db/schema";
 
 interface Stage {
   id: string;
@@ -264,13 +265,7 @@ export function CyclesManagement({ cycles }: CyclesManagementProps) {
                     </Badge>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {[
-                      "PREPARATION",
-                      "APPLICATION",
-                      "INTERVIEW",
-                      "TRAIL",
-                      "FINAL",
-                    ].map((stage) => (
+                    {applicationCycleStatusEnum.enumValues.map((stage) => (
                       <Button
                         key={stage}
                         variant={"outline"}

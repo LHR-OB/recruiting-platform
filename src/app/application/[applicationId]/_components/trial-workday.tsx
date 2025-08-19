@@ -4,17 +4,11 @@ import { buttonVariants } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 import type { applications } from "~/server/db/schema";
 
-const TrialWorkday = ({
-  application,
-}: {
-  application: InferSelectModel<typeof applications> & {
-    team: { name: string };
-  };
-}) => {
+const TrialWorkday = ({ team }: { team: string }) => {
   return (
     <div>
       <p>As part of our next stage, please confirm your availability!</p>
-      {application.team.name === "Solar" && (
+      {team === "Solar" && (
         <Link
           className={cn(buttonVariants({}), "mt-4")}
           href={`https://forms.gle/Wot5StyzP9HCZtiN8`}
@@ -22,7 +16,7 @@ const TrialWorkday = ({
           Schedule Solar Trial
         </Link>
       )}
-      {application.team.name === "Combustion" && (
+      {team === "Combustion" && (
         <Link
           className={cn(buttonVariants({}), "mt-4")}
           href={`https://forms.gle/e2UZ7mdNdyjfENeG6`}
@@ -30,7 +24,7 @@ const TrialWorkday = ({
           Schedule Combustion Trial
         </Link>
       )}
-      {application.team.name === "Electric" && (
+      {team === "Electric" && (
         <Link
           className={cn(buttonVariants({}), "mt-4")}
           href={`https://forms.gle/ytKMqDeAUkTYywuDA`}
