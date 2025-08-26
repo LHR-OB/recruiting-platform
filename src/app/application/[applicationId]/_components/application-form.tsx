@@ -278,7 +278,7 @@ const ApplicationForm = ({
         <InnerApplicationForm.Error.SystemJustification />
       </div>
       <div className="space-y-2">
-        <p>Tell us about a project of yours (optional picture)</p>
+        <p>Tell us about a project of yours</p>
         <InnerApplicationForm.Field.Project
           className="w-lg resize-none"
           placeholder="150 word limit"
@@ -296,7 +296,8 @@ const ApplicationForm = ({
         />
         <p>
           I attest everything on this application is truthful and is written by
-          me.
+          me. I affirm that I cannot make any changes to this application after
+          submission.
         </p>
       </div>
       <InnerApplicationForm.Error.Verification />
