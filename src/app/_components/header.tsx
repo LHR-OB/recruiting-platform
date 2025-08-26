@@ -16,6 +16,7 @@ import {
 const defaultLinks = {
   LHR: "/",
   Teams: "/teams/public",
+  FAQ: "/faq",
 };
 
 const applicantLinks = {
@@ -23,12 +24,12 @@ const applicantLinks = {
 };
 
 const memberLinks = {
-  People: "/people",
   Applications: "/applications",
   Interviews: "/interviews",
 };
 
 const managementLinks = {
+  People: "/people",
   "Team Management": "/teams",
 };
 

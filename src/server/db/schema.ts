@@ -441,6 +441,18 @@ export const blacklistedEids = createTable("blacklisted_eid", (_) => ({
   createdBy: pgVarchar("createdBy", { length: 255 }).notNull(),
 }));
 
+export const faq = createTable("faq", (_) => ({
+  id: pgVarchar("id", { length: 255 }).primaryKey(),
+
+  mdx: pgText("mdx"), // TipTap/MDX content
+  createdAt: pgTimestamp("createdAt", { withTimezone: true })
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  updatedAt: pgTimestamp("updatedAt", { withTimezone: true }).$onUpdate(
+    () => new Date(),
+  ),
+}));
+
 // RELATIONS
 export const usersRelations = relations(users, ({ many, one }) => ({
   accounts: many(accounts),

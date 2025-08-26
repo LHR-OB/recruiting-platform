@@ -8,6 +8,7 @@ import { interviewsRouter } from "~/server/api/routers/interviews";
 import { interviewNotesRouter } from "~/server/api/routers/interviewNotes";
 import { eventsRouter } from "~/server/api/routers/events";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
+import { faqRouter } from "./routers/faq";
 
 /**
  * This is the primary router for your server.
@@ -24,6 +25,7 @@ export const appRouter = createTRPCRouter({
   interviews: interviewsRouter, // <-- already present
   interviewNotes: interviewNotesRouter, // <-- already present
   events: eventsRouter, // <-- ADD THIS
+  faq: faqRouter,
 });
 
 // export type definition of API

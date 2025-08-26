@@ -7,7 +7,7 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Upload, User, Mail, FileText, PhoneIcon } from "lucide-react";
 import type { User as UserType } from "next-auth";
-import { updateProfile } from "../actions";
+import { revalidateEmail, updateProfile } from "../actions";
 import { UploadButton } from "~/app/people/_components/upload-things";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -19,6 +19,7 @@ interface ProfileFormProps {
     phoneNumber?: string | null;
     eidEmail?: string | null;
     major?: string | null;
+    eidEmailVerified?: boolean | null;
   };
   resumeUrl?: string | null;
 }
@@ -126,7 +127,25 @@ export function ProfileForm({ user, resumeUrl }: ProfileFormProps) {
             />
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            {!user.eidEmailVerified && (
+              <Button
+                variant="secondary"
+                onClick={async () => {
+                  const res = await revalidateEmail(email);
+
+                  if (res?.error) {
+                    toast.error(res.error);
+                  } else {
+                    toast.success(
+                      "Verification email sent! Please check your inbox.",
+                    );
+                  }
+                }}
+              >
+                Re-send Verification Email
+              </Button>
+            )}
             <Button onClick={handleSaveProfile} disabled={isSaving}>
               {isSaving ? "Saving..." : "Save Changes"}
             </Button>

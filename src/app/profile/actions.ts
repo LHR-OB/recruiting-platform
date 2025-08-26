@@ -19,6 +19,47 @@ const updateProfileSchema = z.object({
   major: z.string(),
 });
 
+export async function revalidateEmail(email: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    redirect("/auth/signin");
+  }
+
+  const userWithVerifiedEidEmail = await db.query.users.findFirst({
+    where: (t, { and, eq }) =>
+      and(eq(t.eidEmail, email), eq(t.eidEmailVerified, true)),
+  });
+
+  if (userWithVerifiedEidEmail) {
+    return { success: false, error: "This eid email is already in use." };
+  }
+
+  await db
+    .update(users)
+    .set({
+      eidEmail: email,
+      eidEmailVerified: false,
+    })
+    .where(eq(users.id, session.user.id));
+
+  const verificationInsert = await db
+    .insert(emailVerifications)
+    .values({
+      userId: session.user.id,
+    })
+    .returning();
+  const verification = verificationInsert[0]!;
+
+  const mailOptions = {
+    from: "Longhorn Racing Recruitment <longhornracingrecruitment@gmail.com>",
+    to: email,
+    subject: `LHR Recruiting Email Verification`,
+    text: `Please verify your email at https://recruiting.longhornracing.org/verify/${verification.token}`,
+  };
+
+  await transporter.sendMail(mailOptions);
+}
+
 export async function updateProfile(formData: FormData) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -47,40 +88,8 @@ export async function updateProfile(formData: FormData) {
   }
 
   const needsToRevalidateEmail = !!(email && session.user.eidEmail !== email);
-  if (email && session.user.eidEmail !== email) {
-    const userWithVerifiedEidEmail = await db.query.users.findFirst({
-      where: (t, { and, eq }) =>
-        and(eq(t.eidEmail, email), eq(t.eidEmailVerified, true)),
-    });
-
-    if (userWithVerifiedEidEmail) {
-      return { success: false, error: "This eid email is already in use." };
-    }
-
-    await db
-      .update(users)
-      .set({
-        eidEmail: email,
-        eidEmailVerified: false,
-      })
-      .where(eq(users.id, session.user.id));
-
-    const verificationInsert = await db
-      .insert(emailVerifications)
-      .values({
-        userId: session.user.id,
-      })
-      .returning();
-    const verification = verificationInsert[0]!;
-
-    const mailOptions = {
-      from: "Longhorn Racing Recruitment <longhornracingrecruitment@gmail.com>",
-      to: email,
-      subject: `LHR Recruiting Email Verification`,
-      text: `Please verify your email at https://recruiting.longhornracing.org/verify/${verification.token}`,
-    };
-
-    await transporter.sendMail(mailOptions);
+  if (needsToRevalidateEmail) {
+    await revalidateEmail(email);
   }
 
   await db
