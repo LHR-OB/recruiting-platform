@@ -46,7 +46,10 @@ import {
 import { Input } from "~/components/ui/input";
 import { cn } from "~/lib/utils";
 import type { InferSelectModel } from "drizzle-orm";
-import type { applications } from "~/server/db/schema";
+import type {
+  applicationCycleStatusEnum,
+  applications,
+} from "~/server/db/schema";
 import {
   atom,
   createStore,
@@ -85,10 +88,14 @@ export const internalDecisions: Record<
 };
 
 export const tableDataAtom = atom<InferSelectModel<typeof applications>[]>([]);
+export const stageAtom =
+  atom<(typeof applicationCycleStatusEnum.enumValues)[number]>("FINAL");
 
 export function DataTable<TData, TValue>({
   columns,
-}: DataTableProps<TData, TValue>) {
+}: DataTableProps<TData, TValue> & {
+  stage: (typeof applicationCycleStatusEnum.enumValues)[number];
+}) {
   const [sorting, setSorting] = useState<SortingState>([
     {
       id: "internalDecision",
@@ -110,7 +117,6 @@ export function DataTable<TData, TValue>({
     data: statefulData,
     columns,
     getCoreRowModel: getCoreRowModel(),
-
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getPaginationRowModel: getPaginationRowModel(),
@@ -284,9 +290,12 @@ export function DataTable<TData, TValue>({
 const store = createStore();
 
 export function TableWithProvider<TData, TValue>(
-  props: DataTableProps<TData, TValue>,
+  props: DataTableProps<TData, TValue> & {
+    stage: (typeof applicationCycleStatusEnum.enumValues)[number];
+  },
 ) {
   store.set(tableDataAtom, props.data);
+  store.set(stageAtom, props.stage);
 
   return (
     <Provider store={store}>

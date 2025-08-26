@@ -53,6 +53,7 @@ export const users = createTable(
     eidEmail: pgVarchar("eidEmail", { length: 255 }), // Optional EID email
     eidEmailVerified: pgBoolean("eidEmailVerified").default(false).notNull(), // EID email verification status
     phoneNumber: pgVarchar("phoneNumber", { length: 20 }), // Optional phone number
+    major: pgVarchar("major", { length: 100 }), // Optional major
   }),
   (t) => ({
     eidEmailVerifiedUnq: uniqueIndex("eid_email_verified_unique_idx")

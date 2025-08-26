@@ -17,14 +17,17 @@ import { useRouter } from "next/navigation";
 interface ProfileFormProps {
   user: UserType & {
     phoneNumber?: string | null;
+    eidEmail?: string | null;
+    major?: string | null;
   };
   resumeUrl?: string | null;
 }
 
 export function ProfileForm({ user, resumeUrl }: ProfileFormProps) {
   const [name, setName] = useState(user.name ?? "");
-  const [email, setEmail] = useState(user.email ?? "");
+  const [email, setEmail] = useState(user.eidEmail ?? "");
   const [number, setNumber] = useState(user.phoneNumber ?? "");
+  const [major, setMajor] = useState(user.major ?? "");
   const [isSaving, setIsSaving] = useState(false);
   const [resumeFile, setResumeFile] = useState<string | null>(
     resumeUrl ?? null,
@@ -39,6 +42,7 @@ export function ProfileForm({ user, resumeUrl }: ProfileFormProps) {
     formData.append("name", name);
     formData.append("email", email);
     formData.append("phoneNumber", number);
+    formData.append("major", major);
 
     const { needsToRevalidateEmail, success, error } =
       await updateProfile(formData);
@@ -109,6 +113,17 @@ export function ProfileForm({ user, resumeUrl }: ProfileFormProps) {
                 className="pl-10"
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="major">Major</Label>
+            <Input
+              id="major"
+              value={major}
+              onChange={(e) => setMajor(e.target.value)}
+              placeholder="Enter your major"
+              className="mt-1"
+            />
           </div>
 
           <div className="flex justify-end">

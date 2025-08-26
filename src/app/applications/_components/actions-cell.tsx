@@ -2,12 +2,14 @@ import {
   internalStatuses,
   internalDecisions,
   tableDataAtom,
+  stageAtom,
 } from "./data-table";
 import {
   moveApplicantToNextStage,
   rejectApplicant,
   setApplicantDecision,
   setApplicantStage,
+  waitlistApplicant,
 } from "../actions";
 import { toast } from "sonner";
 import { cn } from "~/lib/utils";
@@ -43,7 +45,7 @@ import {
   CircleDotDashedIcon,
   LoaderCircleIcon,
 } from "lucide-react";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import type { InferSelectModel, InferSelectViewModel } from "drizzle-orm";
 
 import {
@@ -79,12 +81,13 @@ const ActionsCell: ColumnDefTemplate<CellContext<Application, string>> = ({
 }) => {
   const { original } = row;
   const open = row.getIsSelected();
+  const model = table.getSortedRowModel();
+  const i = model.rows.findIndex((r) => r.id === row.id);
 
-  const indexPageAdjusted = row.index % table.getState().pagination.pageSize;
+  const prevRow = model.rows[i - 1];
+  const nextRow = model.rows[i + 1];
 
-  const prevRow = table.getRowModel().rows[indexPageAdjusted - 1];
-  const nextRow = table.getRowModel().rows[indexPageAdjusted + 1];
-
+  const stage = useAtomValue(stageAtom);
   const setRow = useSetAtom(tableDataAtom);
   const [disableReject, setDisableReject] = useState(false);
   const [disableApprove, setDisableApprove] = useState(false);
@@ -116,7 +119,6 @@ const ActionsCell: ColumnDefTemplate<CellContext<Application, string>> = ({
                     <ChevronsRightIcon className="h-4 w-4" />
                   </Button>
                 </SheetClose>
-
                 <Button
                   size="sm"
                   variant="destructive"
@@ -183,6 +185,29 @@ const ActionsCell: ColumnDefTemplate<CellContext<Application, string>> = ({
                   )) ||
                     "Approve"}
                 </Button>
+                {stage === "FINAL" && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={async () => {
+                      await waitlistApplicant(original.id);
+                      setRow((prev) => {
+                        return prev.map((app) => {
+                          if (app.id === original.id) {
+                            return {
+                              ...app,
+                              internalDecision: "WAITLISTED",
+                            };
+                          }
+                          return app;
+                        });
+                      });
+                      toast.success(`Waitlisted ${original.user.name}`);
+                    }}
+                  >
+                    Waitlist
+                  </Button>
+                )}
               </div>
               <div className="flex gap-2">
                 <Link

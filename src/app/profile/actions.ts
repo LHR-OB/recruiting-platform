@@ -16,6 +16,7 @@ const updateProfileSchema = z.object({
     .email("Valid email is required")
     .refine((s) => s.endsWith("@eid.utexas.edu")),
   phoneNumber: z.string().max(20, "Phone number must be 20 characters or less"),
+  major: z.string(),
 });
 
 export async function updateProfile(formData: FormData) {
@@ -28,17 +29,18 @@ export async function updateProfile(formData: FormData) {
     name: formData.get("name"),
     email: formData.get("email"),
     phoneNumber: formData.get("phoneNumber"),
+    major: formData.get("major"),
   });
 
   if (!validatedFields.success) {
     return {
       success: false,
       error:
-        "Invalid form data. Email must end with eid.utexas.edu, and phone number must be valid",
+        "Invalid form data. Email must end with eid.utexas.edu, and phone number must be valid. Major must be provided.",
     };
   }
 
-  const { name, email, phoneNumber } = validatedFields.data;
+  const { name, email, phoneNumber, major } = validatedFields.data;
 
   if (!email.endsWith("eid.utexas.edu")) {
     return { success: false, error: "Email must end with @eid.utexas.edu" };
@@ -46,6 +48,15 @@ export async function updateProfile(formData: FormData) {
 
   const needsToRevalidateEmail = !!(email && session.user.eidEmail !== email);
   if (email && session.user.eidEmail !== email) {
+    const userWithVerifiedEidEmail = await db.query.users.findFirst({
+      where: (t, { and, eq }) =>
+        and(eq(t.eidEmail, email), eq(t.eidEmailVerified, true)),
+    });
+
+    if (userWithVerifiedEidEmail) {
+      return { success: false, error: "This eid email is already in use." };
+    }
+
     await db
       .update(users)
       .set({
@@ -77,6 +88,7 @@ export async function updateProfile(formData: FormData) {
     .set({
       name,
       phoneNumber,
+      major,
       updatedAt: new Date(),
     })
     .where(eq(users.id, session.user.id));

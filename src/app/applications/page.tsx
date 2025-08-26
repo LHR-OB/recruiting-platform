@@ -51,6 +51,22 @@ const Page = async () => {
 
   const blacklist = await getBlacklist();
 
+  const currStage = await db.query.applicationCycles.findFirst({
+    where: (t, { and, lte, gte }) =>
+      and(lte(t.startDate, new Date()), gte(t.endDate, new Date())),
+  });
+
+  if (!currStage) {
+    return (
+      <div className="pb-6">
+        <h1 className="text-2xl font-medium">Applications</h1>
+        <p className="text-muted-foreground">
+          There is no active application cycle at the moment.
+        </p>
+      </div>
+    );
+  }
+
   let data = await db.query.applications.findMany({
     where: (applications, { eq, and, ne, isNotNull, notInArray }) =>
       and(
@@ -68,6 +84,8 @@ const Page = async () => {
               blacklist.map((b) => b.user!.id),
             )
           : undefined,
+
+        eq(applications.applicationCycleId, currStage.id),
       ),
     with: {
       user: {
@@ -146,7 +164,11 @@ const Page = async () => {
       </div>
       <div className="absolute left-0 container mx-auto border-b" />
       <div className="h-max pt-4">
-        <TableWithProvider columns={columns} data={data} />
+        <TableWithProvider
+          columns={columns}
+          data={data}
+          stage={currStage.stage}
+        />
       </div>
     </>
   );

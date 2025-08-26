@@ -109,3 +109,29 @@ export async function moveApplicantToNextStage(applicationId: string) {
 
   return nextStage;
 }
+
+export async function waitlistApplicant(applicationId: string) {
+  "use server";
+
+  const application = await db.query.applications.findFirst({
+    where: (t, { eq }) => eq(t.id, applicationId),
+  });
+
+  const session = await auth();
+
+  if (!session || !hasPermission(session, "*application", "update")) {
+    return "User does not have permission to update applications";
+  }
+
+  if (!application) {
+    return "Application not found";
+  }
+
+  await db
+    .update(applications)
+    .set({
+      internalDecision: "WAITLISTED",
+      updatedAt: new Date(),
+    })
+    .where(eq(applications.id, applicationId));
+}

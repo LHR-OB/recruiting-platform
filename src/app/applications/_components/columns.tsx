@@ -178,8 +178,8 @@ export const columns: ColumnDef<Application>[] = [
         <Button
           variant="ghost"
           className="-ml-2.5"
-          size="sm"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          size="sm"
         >
           Stage
           <ChevronsUpDownIcon />
@@ -209,7 +209,6 @@ export const columns: ColumnDef<Application>[] = [
     },
     filterFn: "arrIncludesSome",
   },
-
   {
     id: "actions",
     cell: ActionsCell,

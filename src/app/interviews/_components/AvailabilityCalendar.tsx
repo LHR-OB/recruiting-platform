@@ -317,6 +317,7 @@ export function AvailabilityCalendar({
                 const payload = daysInRange.map((date) => ({
                   date,
                   systemId: selectedSystemId,
+
                   startTime: parse(selectedStartTime, "HH:mm", new Date()),
                   endTime: parse(selectedEndTime, "HH:mm", new Date()),
                 }));
@@ -407,7 +408,6 @@ export function AvailabilityCalendar({
                     value={selectedEndTime}
                     onChange={(e) => setSelectedEndTime(e.target.value)}
                     required
-                    step="1"
                     name="endTime"
                   />
                 </div>
