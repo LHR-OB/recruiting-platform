@@ -357,7 +357,9 @@ const ActionsCell: ColumnDefTemplate<CellContext<Application, string>> = ({
           </div>
           <SheetHeader className="pt-1">
             <SheetTitle>{original.user.name}</SheetTitle>
-            <SheetDescription>{original.user.email}</SheetDescription>
+            <SheetDescription>{original.major}</SheetDescription>
+            <SheetDescription>{original.phoneNumber}</SheetDescription>
+            <SheetDescription>{original.user.eidEmail?.split("@")[0] || null}</SheetDescription>
             <div className="flex gap-1">
               <Badge variant="secondary">
                 {appStatusToIcon[original.internalDecision ?? "NEEDS_REVIEW"]}
