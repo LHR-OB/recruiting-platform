@@ -135,7 +135,7 @@ const AppPage = async ({
             {application.cycle.stage === "TRAIL" && (
               <TrialWorkday team={application.team.name} />
             )}
-            {application.cycle.stage === "FINAL"} && <InReview />
+            {application.cycle.stage === "FINAL" && <InReview />}
           </>
         )}
         {application.status === "REJECTED" && (

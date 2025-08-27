@@ -11,13 +11,7 @@ import { Placeholder } from "@tiptap/extensions";
 import { api } from "~/trpc/react";
 import { useDebouncedCallback } from "use-debounce";
 
-const FaqEditor = ({
-  faqId,
-  content,
-}: {
-  faqId: string;
-  content: JSONContent;
-}) => {
+const FaqEditor = ({ faqId, content }: { faqId: string; content: string }) => {
   const updateFaqMutation = api.faq.updateFaq.useMutation();
   const onUpdate = useDebouncedCallback(
     ({ editor }: EditorEvents["update"]) => {

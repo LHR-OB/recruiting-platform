@@ -7,6 +7,7 @@ const ReadOnly = ({ content }: { content: string | null }) => {
 
   return (
     <div
+      className="tiptap"
       dangerouslySetInnerHTML={{
         __html: content,
       }}

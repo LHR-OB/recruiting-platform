@@ -26,13 +26,13 @@ const TeamPage = async ({
   const session = await auth();
   const rbac = session ? new UserRbac(session.user) : undefined;
 
-  const [html, json] = await generateContent(team.mdx);
+  const html = await generateContent(team.mdx);
 
   return (
     <>
       <h1 className="text-2xl font-medium">{team?.name}</h1>
       {(rbac?.permissionForEditingTeamPage(teamId) && (
-        <Editor teamId={teamId} content={json} />
+        <Editor teamId={teamId} content={html} />
       )) || <ReadOnly content={html} />}
     </>
   );

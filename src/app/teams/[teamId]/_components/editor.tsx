@@ -11,13 +11,7 @@ import { api } from "~/trpc/react";
 import { useDebouncedCallback } from "use-debounce";
 import { Placeholder } from "@tiptap/extensions";
 
-const Editor = ({
-  teamId,
-  content,
-}: {
-  teamId: string;
-  content: JSONContent;
-}) => {
+const Editor = ({ teamId, content }: { teamId: string; content: string }) => {
   const updateContentMutation = api.teams.updateTeam.useMutation();
   const onUpdate = useDebouncedCallback(
     ({ editor }: EditorEvents["update"]) => {

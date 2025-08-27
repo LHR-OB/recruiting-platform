@@ -32,11 +32,10 @@ export async function generateContent(mdx: string | null) {
   "use cache";
   unstable_cacheLife("days");
 
-  if (!mdx) return ["", {} as JSONContent] as const;
-
+  if (!mdx) return "";
   const html = generateHTML(JSON.parse(mdx) as JSONContent, [StarterKit]);
 
-  return [html, generateJSON(html, [StarterKit])] as const;
+  return html;
 }
 
 export default async function SystemPage({
@@ -54,7 +53,7 @@ export default async function SystemPage({
     return notFound();
   }
 
-  const [html, jsonContent] = await generateContent(system.mdx);
+  const html = await generateContent(system.mdx);
 
   return (
     <>
@@ -65,8 +64,8 @@ export default async function SystemPage({
       <div className="absolute left-0 w-full border-b" />
       <div className="pt-4">
         {(session &&
-          rbac.permissionForStaticResource(systemId, "update", "system") && (
-            <Editor systemId={systemId} content={jsonContent} />
+          rbac?.permissionForStaticResource(systemId, "update", "system") && (
+            <Editor systemId={systemId} content={html} />
           )) || <ReadOnly content={html} />}
       </div>
     </>

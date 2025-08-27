@@ -16,7 +16,7 @@ const Editor = ({
   content,
 }: {
   systemId: string;
-  content: JSONContent;
+  content: string;
 }) => {
   const updateContentMutation = api.teams.updateSystem.useMutation();
   const onUpdate = useDebouncedCallback(

@@ -1,3 +1,5 @@
+"use server";
+
 import { db } from "~/server/db";
 import { faq } from "~/server/db/schema";
 import { notFound } from "next/navigation";
@@ -27,22 +29,26 @@ export async function generateContent(mdx: string | null) {
   "use cache";
   unstable_cacheLife("minutes");
 
-  if (!mdx) return ["", {} as JSONContent] as const;
+  if (!mdx) return "";
   const html = generateHTML(JSON.parse(mdx) as JSONContent, [StarterKit]);
-  return [html, generateJSON(html, [StarterKit])] as const;
+
+  return html;
 }
 
 export default async function FaqPage() {
   const session = await auth();
   const faq = await getFaq();
   if (!faq) return notFound();
-  const [html, jsonContent] = await generateContent(faq.mdx);
+
+  const html = await generateContent(faq.mdx);
+
+  console.log(html);
 
   return (
     <>
       <h1 className="mb-4 text-3xl font-medium">FAQ</h1>
       {session && isAtLeast(session.user.role, "ADMIN") ? (
-        <FaqEditor faqId={faq.id} content={jsonContent} />
+        <FaqEditor faqId={faq.id} content={html} />
       ) : (
         <ReadOnly content={html} />
       )}

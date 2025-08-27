@@ -12,10 +12,12 @@ const Footer = () => {
   return (
     <>
       <div className="w-full border-b" />
-      <footer className="text-muted-foreground container mx-auto flex items-center justify-between py-2">
-        <p className="text-sm">© 2025 Longhorn Racing</p>
-        <div className="flex gap-2">
-          <Button variant="link" className="text-muted-foreground"
+      <footer className="text-muted-foreground container mx-auto flex flex-col justify-between px-2 py-2 sm:flex-row sm:items-center sm:px-0">
+        <p className="pr-2 text-sm">© 2025 Longhorn Racing</p>
+        <div className="flex grow justify-between gap-2 sm:grow-0 sm:justify-end">
+          <Button
+            variant="link"
+            className="text-muted-foreground pl-0 text-sm font-normal sm:pl-2 sm:font-medium"
             onClick={() => signOutAction()}
           >
             Sign Out
@@ -25,9 +27,10 @@ const Footer = () => {
             onClick={() =>
               setTheme(resolvedTheme === "dark" ? "light" : "dark")
             }
+            className="text-sm"
           >
             <ContrastIcon />
-          </Button>>
+          </Button>
         </div>
       </footer>
     </>

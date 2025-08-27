@@ -40,7 +40,7 @@ const TeamPublicPage = async () => {
               <p className="text-muted-foreground">
                 The following systems are recruiting:
               </p>
-              <div className="flex flex-col gap-4 pt-2">
+              <div className="flex flex-col gap-2 pt-2">
                 {team.systems.map((system) => (
                   <Link
                     href={"/systems/[systemId]"}
@@ -52,17 +52,15 @@ const TeamPublicPage = async () => {
                       buttonVariants({
                         variant: "link",
                       }),
-                      "w-fit py-2 pl-0",
+                      "h-fit max-w-full flex-col items-start gap-0 py-0 pl-0 wrap-normal",
                     )}
                   >
-                    <p className="">
-                      {system.name} <br />
-                      <span className="text-muted-foreground">
-                        {(system.description?.length ?? 0) > 0
-                          ? system.description
-                          : "No subsystems"}
-                      </span>
-                    </p>
+                    <span>{system.name}</span>
+                    <span className="text-muted-foreground inline-block w-full break-words whitespace-break-spaces">
+                      {(system.description?.length ?? 0) > 0
+                        ? system.description
+                        : "No subsystems"}
+                    </span>
                   </Link>
                 ))}
               </div>

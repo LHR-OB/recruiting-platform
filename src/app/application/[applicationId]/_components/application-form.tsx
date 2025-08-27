@@ -17,6 +17,16 @@ import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
 import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "~/components/ui/dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -73,10 +83,12 @@ const ApplicationForm = ({
         defaults: initial as any,
         Error: ({ error }) => <span className="text-destructive">{error}</span>,
         Submit: (props) => (
-          <Button {...props}>{status === "DRAFT" ? "Submit" : "Save"}</Button>
+          <Button form="application" {...props}>
+            Submit
+          </Button>
         ),
       }),
-    [initial, teamSystems, status],
+    [initial, teamSystems],
   );
 
   // auto-save application form
@@ -84,6 +96,7 @@ const ApplicationForm = ({
   const onUpdate = useDebouncedCallback<
     Parameters<typeof InnerApplicationForm.useOnChange>[0]
   >((fd, fe) => {
+    console.log(fe);
     if (Object.values(fe).some((v) => Boolean(v))) {
       console.warn(fe);
       return;
@@ -133,6 +146,7 @@ const ApplicationForm = ({
 
   const Form = (
     <InnerApplicationForm
+      id="application"
       className="flex flex-col gap-4 pt-4"
       onSubmit={async (_, { setError }) => {
         if (duplicateSystems) {
@@ -185,7 +199,7 @@ const ApplicationForm = ({
       <div className="space-y-2">
         <p>Why are you interested in LHR?</p>
         <InnerApplicationForm.Field.Interest
-          className="w-lg resize-none"
+          className="max-w-lg resize-none"
           placeholder="150 word limit"
           disabled={disabled}
         />
@@ -271,7 +285,7 @@ const ApplicationForm = ({
           Why are you interested in {systemListString ?? "the above systems"}?
         </p>
         <InnerApplicationForm.Field.SystemJustification
-          className="w-lg resize-none"
+          className="max-w-lg resize-none"
           placeholder="200 word limit"
           disabled={disabled}
         />
@@ -280,18 +294,19 @@ const ApplicationForm = ({
       <div className="space-y-2">
         <p>Tell us about a project of yours</p>
         <InnerApplicationForm.Field.Project
-          className="w-lg resize-none"
+          className="max-w-lg resize-none"
           placeholder="150 word limit"
           disabled={disabled}
         />
         <InnerApplicationForm.Error.Project />
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex gap-2">
         <Checkbox
           checked={checkboxValue}
           onCheckedChange={(v) =>
             InnerApplicationForm.Field.Verification.setValue(Boolean(v))
           }
+          className="mt-1"
           disabled={disabled}
         />
         <p>
@@ -301,9 +316,31 @@ const ApplicationForm = ({
         </p>
       </div>
       <InnerApplicationForm.Error.Verification />
-      <div>
-        <InnerApplicationForm.Event.Submit disabled={disabled} />
-      </div>
+      <Dialog modal={true}>
+        <DialogTrigger asChild>
+          <Button className="w-fit">Submit</Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Are you sure you want to submit?</DialogTitle>
+            <DialogDescription>
+              Once you submit, you will not be able to make any changes to your
+              application.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="secondary" className="w-fit">
+                Cancel
+              </Button>
+            </DialogClose>
+            <InnerApplicationForm.Event.Submit
+              disabled={disabled}
+              className="w-fit"
+            />
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </InnerApplicationForm>
   );
 
