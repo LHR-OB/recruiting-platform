@@ -94,6 +94,8 @@ const Page = async () => {
           name: true,
           email: true,
           resumeUrl: true,
+          major: true,
+          phoneNumber: true,
         },
         with: {
           applications: {
