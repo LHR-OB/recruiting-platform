@@ -384,8 +384,7 @@ const ActionsCell: ColumnDefTemplate<CellContext<Application, string>> = ({
                       .map((app) => {
                         return (
                           <Badge variant="secondary" key={app.id}>
-                            {app.team.name} - {app.data.system1},{" "}
-                            {app.data.system2}, {app.data.system3}
+                            {"[" + app.team.name + "] 1 - " + app.data.system1 + ", 2 - " + app.data.system2 + ", 3 - " + app.data.system3}
                           </Badge>
                         );
                       })) || <span className="text-sm">None</span>}
@@ -396,9 +395,9 @@ const ActionsCell: ColumnDefTemplate<CellContext<Application, string>> = ({
                   Systems (Ranked)
                 </p>
                 {[
-                  original.data?.system1,
-                  original.data?.system2,
-                  original.data?.system3,
+                  "1 - " + original.data?.system1,
+                  "2 - " + original.data?.system2,
+                  "3 - " + original.data?.system3,
                 ]
                   .filter((sys) => sys)
                   .map((sys) => (
