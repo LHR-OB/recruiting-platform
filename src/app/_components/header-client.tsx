@@ -55,8 +55,8 @@ function HeaderClient({
           <div
             className={cn(
               "bg-background/80 fixed top-16 left-0 z-50 flex h-screen w-full flex-col gap-1 border-b px-2 shadow-md backdrop-blur-sm transition",
-              "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-              !menuOpen && "pointer-events-none opacity-0",
+              "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 pointer-events-none opacity-0",
+              menuOpen && "pointer-events-auto opacity-100",
             )}
             {...{ "data-state": menuOpen ? "open" : "closed" }}
           >

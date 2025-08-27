@@ -82,6 +82,10 @@ const ActionsCell: ColumnDefTemplate<CellContext<Application, string>> = ({
   const { original } = row;
   const open = row.getIsSelected();
   const model = table.getSortedRowModel();
+
+  const pageSize = table.getState().pagination.pageSize;
+  const currPage = table.getState().pagination.pageIndex;
+
   const i = model.rows.findIndex((r) => r.id === row.id);
 
   const prevRow = model.rows[i - 1];
@@ -325,6 +329,10 @@ const ActionsCell: ColumnDefTemplate<CellContext<Application, string>> = ({
                   className="bg-muted-foreground/10 dark:hover:bg-muted-foreground/20 size-8 h-8"
                   disabled={!nextRow}
                   onClick={() => {
+                    if ((currPage + 1) * pageSize - 1 === i) {
+                      table.nextPage();
+                    }
+
                     table.setRowSelection({
                       [row.id]: false,
                       ...(nextRow && {
@@ -335,20 +343,23 @@ const ActionsCell: ColumnDefTemplate<CellContext<Application, string>> = ({
                 >
                   <ChevronDownIcon className="h-4 w-4" />
                 </Button>
-
                 <Button
                   variant="ghost"
                   size="sm"
                   className="bg-muted-foreground/10 dark:hover:bg-muted-foreground/20 size-8 h-8"
                   disabled={!prevRow}
-                  onClick={() =>
+                  onClick={() => {
+                    if (currPage * pageSize === i) {
+                      table.previousPage();
+                    }
+
                     table.setRowSelection({
                       [row.id]: false,
                       ...(prevRow && {
                         [prevRow.id]: true,
                       }),
-                    })
-                  }
+                    });
+                  }}
                 >
                   <ChevronUpIcon className="h-4 w-4" />
                 </Button>
