@@ -357,9 +357,12 @@ const ActionsCell: ColumnDefTemplate<CellContext<Application, string>> = ({
           </div>
           <SheetHeader className="pt-1">
             <SheetTitle>{original.user.name}</SheetTitle>
-            <SheetDescription>{original.major}</SheetDescription>
-            <SheetDescription>{original.phoneNumber}</SheetDescription>
-            <SheetDescription>{original.user.eidEmail?.split("@")[0] || null}</SheetDescription>
+            <SheetDescription>{original.user.major}</SheetDescription>
+            <SheetDescription>{original.user.email}</SheetDescription>
+            <SheetDescription>{original.user.phoneNumber}</SheetDescription>
+            <SheetDescription>
+              {original.user.eidEmail?.split("@")[0] || null}
+            </SheetDescription>
             <div className="flex gap-1">
               <Badge variant="secondary">
                 {appStatusToIcon[original.internalDecision ?? "NEEDS_REVIEW"]}
@@ -376,7 +379,7 @@ const ActionsCell: ColumnDefTemplate<CellContext<Application, string>> = ({
             <div className="flex flex-col gap-4">
               <div className="space-y-1 pt-1">
                 <p className="text-muted-foreground text-sm">
-                  Teams Applied This Cycle
+                  Other Teams Applied This Cycle
                 </p>
                 <div className="flex flex-col gap-2">
                   {(original.otherApplications.filter((app) => app.data)
@@ -385,9 +388,26 @@ const ActionsCell: ColumnDefTemplate<CellContext<Application, string>> = ({
                       .filter((app) => app.data)
                       .map((app) => {
                         return (
-                          <Badge variant="secondary" key={app.id}>
-                            {"[" + app.team.name + "] 1 - " + app.data.system1 + ", 2 - " + app.data.system2 + ", 3 - " + app.data.system3}
-                          </Badge>
+                          <div
+                            variant="secondary"
+                            key={app.id}
+                            className="gap-1 text-sm"
+                          >
+                            <p>{app.team.name}</p>
+                            <div className="flex gap-2 pt-1">
+                              {[
+                                "1 - " + app.data?.system1,
+                                "2 - " + app.data?.system2,
+                                "3 - " + app.data?.system3,
+                              ]
+                                .filter((sys) => sys)
+                                .map((sys) => (
+                                  <Badge variant="secondary" key={sys}>
+                                    {sys}
+                                  </Badge>
+                                ))}
+                            </div>
+                          </div>
                         );
                       })) || <span className="text-sm">None</span>}
                 </div>
