@@ -307,6 +307,10 @@ export const applications = createTable(
     updatedAt: pgTimestamp("updatedAt", { withTimezone: true }).$onUpdate(
       () => new Date(),
     ),
+    rejectedFrom: pgJsonb("consideredSystems")
+      .$type<string[]>()
+      .default([])
+      .notNull(), // Array of system IDs considered
   }),
   (t) => [
     index("application_user_idx").on(t.userId),

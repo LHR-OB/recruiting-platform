@@ -96,6 +96,7 @@ const Page = async () => {
           resumeUrl: true,
           major: true,
           phoneNumber: true,
+          eidEmail: true,
         },
         with: {
           applications: {
@@ -140,14 +141,21 @@ const Page = async () => {
     );
   }
 
-  data = data.map((app) => ({
-    ...app,
-    otherApplications: app.user.applications.filter(
-      (otherApp) =>
-        app.applicationCycleId === otherApp.applicationCycleId &&
-        app.id !== otherApp.id,
-    ),
-  }));
+  data = data
+    .map((app) => ({
+      ...app,
+      otherApplications: app.user.applications.filter(
+        (otherApp) =>
+          app.applicationCycleId === otherApp.applicationCycleId &&
+          app.id !== otherApp.id,
+      ),
+    }))
+    .map((app) => ({
+      ...app,
+      internalDecision: app.rejectedFrom.includes(currentSystemName!)
+        ? "REJECTED"
+        : app.internalDecision,
+    }));
 
   return (
     <>
@@ -170,6 +178,7 @@ const Page = async () => {
           columns={columns}
           data={data}
           stage={currStage.stage}
+          system={session.user.systemId}
         />
       </div>
     </>

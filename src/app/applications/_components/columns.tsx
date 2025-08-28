@@ -42,7 +42,12 @@ import {
 } from "~/server/db/schema";
 
 import ActionsCell from "./actions-cell";
-import { internalDecisions, internalStatuses } from "./data-table";
+import {
+  internalDecisions,
+  internalStatuses,
+  systemIdAtom,
+} from "./data-table";
+import { useAtomValue } from "jotai";
 
 export const appStatusToIcon = {
   NEEDS_REVIEW: <EyeIcon className="stroke-background fill-foreground" />,
@@ -73,6 +78,7 @@ export const appStageToIcon = {
 
 type App = InferSelectModel<typeof applications> & {
   team: Pick<InferSelectModel<typeof teams>, "name">;
+  consideredSystems: string[];
 };
 
 export type Application = App & {

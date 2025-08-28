@@ -90,6 +90,7 @@ export const internalDecisions: Record<
 export const tableDataAtom = atom<InferSelectModel<typeof applications>[]>([]);
 export const stageAtom =
   atom<(typeof applicationCycleStatusEnum.enumValues)[number]>("FINAL");
+export const systemIdAtom = atom<string>();
 
 export function DataTable<TData, TValue>({
   columns,
@@ -292,10 +293,12 @@ const store = createStore();
 export function TableWithProvider<TData, TValue>(
   props: DataTableProps<TData, TValue> & {
     stage: (typeof applicationCycleStatusEnum.enumValues)[number];
+    system: string;
   },
 ) {
   store.set(tableDataAtom, props.data);
   store.set(stageAtom, props.stage);
+  store.set(systemIdAtom, props.system);
 
   return (
     <Provider store={store}>

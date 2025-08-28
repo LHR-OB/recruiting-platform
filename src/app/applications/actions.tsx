@@ -60,7 +60,10 @@ export const setApplicantDecision = async (
     .where(eq(applications.id, applicationId));
 };
 
-export const rejectApplicant = async (applicationId: string) => {
+export const rejectApplicant = async (
+  applicationId: string,
+  systemId: string,
+) => {
   "use server";
 
   const application = await db.query.applications.findFirst({
@@ -77,13 +80,28 @@ export const rejectApplicant = async (applicationId: string) => {
     return "Application not found";
   }
 
-  await db
-    .update(applications)
-    .set({
-      internalDecision: "REJECTED",
-      updatedAt: new Date(),
-    })
-    .where(eq(applications.id, applicationId));
+  if (!application.rejectedFrom.includes(systemId)) {
+    if (application.rejectedFrom.length + 1 >= 3) {
+      await db
+        .update(applications)
+        .set({
+          internalDecision: "REJECTED",
+          updatedAt: new Date(),
+          rejectedFrom: [...application.rejectedFrom, systemId],
+        })
+        .where(eq(applications.id, applicationId));
+    } else {
+      await db
+        .update(applications)
+        .set({
+          rejectedFrom: [...application.rejectedFrom, systemId],
+          updatedAt: new Date(),
+        })
+        .where(eq(applications.id, applicationId));
+    }
+  } else {
+    return "System already in rejected list";
+  }
 };
 
 export async function moveApplicantToNextStage(applicationId: string) {

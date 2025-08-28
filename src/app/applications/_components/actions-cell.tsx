@@ -3,6 +3,7 @@ import {
   internalDecisions,
   tableDataAtom,
   stageAtom,
+  systemIdAtom,
 } from "./data-table";
 import {
   moveApplicantToNextStage,
@@ -92,6 +93,7 @@ const ActionsCell: ColumnDefTemplate<CellContext<Application, string>> = ({
   const nextRow = model.rows[i + 1];
 
   const stage = useAtomValue(stageAtom);
+  const systemId = useAtomValue(systemIdAtom);
   const setRow = useSetAtom(tableDataAtom);
   const [disableReject, setDisableReject] = useState(false);
   const [disableApprove, setDisableApprove] = useState(false);
@@ -129,7 +131,7 @@ const ActionsCell: ColumnDefTemplate<CellContext<Application, string>> = ({
                   disabled={disableReject}
                   onClick={async () => {
                     setDisableReject(true);
-                    const res = await rejectApplicant(original.id);
+                    const res = await rejectApplicant(original.id, systemId!);
 
                     if (res) {
                       toast.error(res);
@@ -368,12 +370,13 @@ const ActionsCell: ColumnDefTemplate<CellContext<Application, string>> = ({
           </div>
           <SheetHeader className="pt-1">
             <SheetTitle>{original.user.name}</SheetTitle>
+            <SheetDescription>
+              {original.user.eidEmail?.split("@")[0]}
+            </SheetDescription>
             <SheetDescription>{original.user.major}</SheetDescription>
             <SheetDescription>{original.user.email}</SheetDescription>
             <SheetDescription>{original.user.phoneNumber}</SheetDescription>
-            <SheetDescription>
-              {original.user.eidEmail?.split("@")[0] || null}
-            </SheetDescription>
+
             <div className="flex gap-1">
               <Badge variant="secondary">
                 {appStatusToIcon[original.internalDecision ?? "NEEDS_REVIEW"]}
