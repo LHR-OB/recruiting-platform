@@ -152,7 +152,7 @@ const Page = async () => {
     }))
     .map((app) => ({
       ...app,
-      internalDecision: app.rejectedFrom.includes(currentSystemName!)
+      internalDecision: app.rejectedFrom.includes(session.user.systemId!)
         ? "REJECTED"
         : app.internalDecision,
     }));
