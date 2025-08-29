@@ -36,7 +36,7 @@ import {
   CommandItem,
   CommandList,
 } from "~/components/ui/command";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -116,7 +116,7 @@ export function DataTable<TData, TValue>({
 
   const table = useReactTable({
     data: statefulData,
-    columns,
+    columns: useMemo(() => columns, [columns]),
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -131,6 +131,7 @@ export function DataTable<TData, TValue>({
       columnVisibility,
       rowSelection,
     },
+    autoResetPageIndex: false,
   });
 
   return (

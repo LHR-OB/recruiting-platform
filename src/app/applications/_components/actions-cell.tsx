@@ -139,6 +139,17 @@ const ActionsCell: ColumnDefTemplate<CellContext<Application, string>> = ({
                       return;
                     }
 
+                    if ((currPage + 1) * pageSize - 1 === i) {
+                      table.nextPage();
+                    }
+
+                    table.setRowSelection({
+                      [row.id]: false,
+                      ...(nextRow && {
+                        [nextRow.id]: true,
+                      }),
+                    });
+
                     setRow((prev) => {
                       return prev.map((app) => {
                         if (app.id === original.id) {
@@ -166,6 +177,18 @@ const ActionsCell: ColumnDefTemplate<CellContext<Application, string>> = ({
                     const currStage = await moveApplicantToNextStage(
                       original.id,
                     );
+
+                    if ((currPage + 1) * pageSize - 1 === i) {
+                      table.nextPage();
+                    }
+
+                    table.setRowSelection({
+                      [row.id]: false,
+                      ...(nextRow && {
+                        [nextRow.id]: true,
+                      }),
+                    });
+
                     setRow((prev) => {
                       return prev.map((app) => {
                         if (app.id === original.id) {
