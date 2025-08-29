@@ -369,13 +369,19 @@ const ActionsCell: ColumnDefTemplate<CellContext<Application, string>> = ({
             </div>
           </div>
           <SheetHeader className="pt-1">
-            <SheetTitle>{original.user.name}</SheetTitle>
+            <div className="flex w-full justify-between">
+              <SheetTitle>{original.user.name}</SheetTitle>
+              <span className="text-muted-foreground">
+                {original.user.phoneNumber}, {original.user.email}
+              </span>
+            </div>
             <SheetDescription>
               {original.user.eidEmail?.split("@")[0]}
             </SheetDescription>
+            <SheetDescription>
+              Created {original.createdAt.toLocaleDateString()}
+            </SheetDescription>
             <SheetDescription>{original.user.major}</SheetDescription>
-            <SheetDescription>{original.user.email}</SheetDescription>
-            <SheetDescription>{original.user.phoneNumber}</SheetDescription>
 
             <div className="flex gap-1">
               <Badge variant="secondary">

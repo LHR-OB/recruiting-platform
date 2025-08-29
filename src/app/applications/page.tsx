@@ -119,7 +119,7 @@ const Page = async () => {
     orderBy: (applications, { asc, desc }) => [
       asc(applications.internalStatus),
       desc(applications.internalDecision),
-      asc(applications.createdAt),
+      desc(applications.createdAt),
     ],
   });
 
