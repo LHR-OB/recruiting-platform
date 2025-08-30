@@ -99,13 +99,17 @@ const AppPage = async ({
               "use server";
 
               if (
-                (application.cycle.stages.find(
-                  (s) => s.stage === "APPLICATION" && s.endDate < new Date(),
-                ) &&
-                  application.cycle.stage !== "APPLICATION") ||
+                !(
+                  application.cycle.stages.find(
+                    (s) =>
+                      s.stage === "APPLICATION" &&
+                      s.startDate > new Date() &&
+                      s.endDate < new Date(),
+                  ) && application.cycle.stage !== "APPLICATION"
+                ) ||
                 application.status === "NEEDS_REVIEW"
               ) {
-                return "Application is not in the correct state to be submitted.";
+                return "It's too late to submit your application.";
               }
 
               if (!application.user.resumeUrl) {
