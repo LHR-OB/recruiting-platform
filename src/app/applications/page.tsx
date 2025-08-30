@@ -7,26 +7,26 @@ import { TableWithProvider } from "./_components/data-table";
 import { db } from "~/server/db";
 
 import { blacklistedEids, users } from "~/server/db/schema";
-import { eq, isNotNull, sql } from "drizzle-orm";
+import { and, eq, isNotNull, sql } from "drizzle-orm";
 import { unstable_cacheTag } from "next/cache";
 import { unstable_cacheLife } from "next/cache";
 
 async function getBlacklist() {
   "use cache";
-  return [];
 
   unstable_cacheTag("blacklist");
   unstable_cacheLife("hours");
 
   return await db
     .select()
-    .from(users)
+    .from(blacklistedEids)
     .rightJoin(
-      blacklistedEids,
-      // the first part of eidEmail is the eid before @
-      eq(
-        sql`substring(${users.eidEmail}, 1, position('@' in ${users.eidEmail}) - 1)`,
-        blacklistedEids.eid,
+      users,
+      and(
+        eq(
+          users.eidEmail,
+          sql.raw(`CONCAT(${blacklistedEids.eid.name}, '@eid.utexas.edu')`),
+        ),
       ),
     )
     .where(isNotNull(blacklistedEids.eid));
@@ -79,12 +79,12 @@ const Page = async () => {
           ? eq(applications.teamId, session.user.teamId)
           : undefined,
 
-        // blacklist.length > 0
-        //   ? notInArray(
-        //       applications.userId,
-        //       blacklist.map((b) => b.user!.id),
-        //     )
-        //   : undefined,
+        blacklist.length > 0
+          ? notInArray(
+              applications.userId,
+              blacklist.map((b) => b.user.id),
+            )
+          : undefined,
 
         eq(applications.applicationCycleId, currStage.id),
       ),
