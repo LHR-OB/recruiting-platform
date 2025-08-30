@@ -51,11 +51,23 @@ export const setApplicantDecision = async (
     return "User does not have permission to update applications";
   }
 
+  const app = await db.query.applications.findFirst({
+    where: (t, { eq }) => eq(t.id, applicationId),
+  });
+
+  if (!app) {
+    return "Application not found";
+  }
+
   await db
     .update(applications)
     .set({
       internalDecision: decision,
       updatedAt: new Date(),
+      rejectedFrom:
+        decision === "REJECTED"
+          ? app.rejectedFrom
+          : app.rejectedFrom.filter((sys) => sys !== session.user.teamId),
     })
     .where(eq(applications.id, applicationId));
 };
