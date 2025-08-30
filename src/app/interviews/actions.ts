@@ -131,6 +131,7 @@ export async function createAvailability(
 
     revalidatePath("/interviews");
   } catch (e) {
+    console.error(e);
     return "Failed to create availability: " + e.message;
   }
 }

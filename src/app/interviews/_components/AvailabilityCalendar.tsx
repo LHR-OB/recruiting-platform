@@ -80,10 +80,13 @@ export function AvailabilityCalendar({
       ? eachDayOfInterval({ start: selectedRange.from, end: selectedRange.to })
       : [];
 
-  // State for system and time selection (applies to all days)
+  // State for system selection
   const [selectedSystemId, setSelectedSystemId] = useState<string>("");
-  const [selectedStartTime, setSelectedStartTime] = useState<string>("09:00");
-  const [selectedEndTime, setSelectedEndTime] = useState<string>("17:00");
+
+  // State for multiple time ranges per day
+  const [timeRanges, setTimeRanges] = useState<
+    { start: string; end: string }[]
+  >([{ start: "09:00", end: "17:00" }]);
 
   // Highlight days with user's own availability
   const datesWithYourAvailability = availabilities.map((avail) => {
@@ -132,21 +135,7 @@ export function AvailabilityCalendar({
                 onSelect={setSelectedRange}
                 // days that already have your availability
                 // or in the past
-                disabled={(date) =>
-                  date < new Date() ||
-                  datesWithYourAvailability.some(
-                    (d) =>
-                      d.getFullYear() === date.getFullYear() &&
-                      d.getMonth() === date.getMonth() &&
-                      d.getDate() === date.getDate(),
-                  ) ||
-                  selectedRangeAvailabilities.some((avail) =>
-                    isWithinInterval(date, {
-                      start: new Date(avail.start),
-                      end: new Date(avail.end),
-                    }),
-                  )
-                }
+                disabled={(date) => date < new Date()}
                 className="rounded-md border [--cell-size:--spacing(10)]"
                 modifiers={{
                   yourExistingAvailability: datesWithYourAvailability,
@@ -314,13 +303,14 @@ export function AvailabilityCalendar({
               onSubmit={async (e) => {
                 e.preventDefault();
 
-                const payload = daysInRange.map((date) => ({
-                  date,
-                  systemId: selectedSystemId,
-
-                  startTime: parse(selectedStartTime, "HH:mm", new Date()),
-                  endTime: parse(selectedEndTime, "HH:mm", new Date()),
-                }));
+                const payload = daysInRange.flatMap((date) =>
+                  timeRanges.map((range) => ({
+                    date,
+                    systemId: selectedSystemId,
+                    startTime: parse(range.start, "HH:mm", new Date()),
+                    endTime: parse(range.end, "HH:mm", new Date()),
+                  })),
+                );
 
                 const res = await createAvailability(payload);
 
@@ -331,12 +321,11 @@ export function AvailabilityCalendar({
 
                   setSelectedRange(undefined);
                   setSelectedSystemId("");
-                  setSelectedStartTime("09:00");
-                  setSelectedEndTime("17:00");
+                  setTimeRanges([{ start: "09:00", end: "17:00" }]);
                   setAvailabilities((prev) => [
                     ...prev,
                     ...payload.map((p) => ({
-                      id: `${p.date.toISOString()}-${p.systemId}`,
+                      id: `${p.date.toISOString()}-${p.systemId}-${format(p.startTime, "HH:mm")}-${format(p.endTime, "HH:mm")}`,
                       systemId: p.systemId,
                       system: {
                         id: p.systemId,
@@ -387,29 +376,58 @@ export function AvailabilityCalendar({
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label htmlFor="startTime" className="pb-2">
-                    Start Time
-                  </Label>
-                  <Input
-                    type="time"
-                    value={selectedStartTime}
-                    onChange={(e) => setSelectedStartTime(e.target.value)}
-                    required
-                    name="startTime"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="endTime" className="pb-2">
-                    End Time
-                  </Label>
-                  <Input
-                    type="time"
-                    value={selectedEndTime}
-                    onChange={(e) => setSelectedEndTime(e.target.value)}
-                    required
-                    name="endTime"
-                  />
+                <div className="flex w-full flex-col gap-2">
+                  <Label>Time Ranges</Label>
+                  {timeRanges.map((range, idx) => (
+                    <div key={idx} className="mt-2 flex items-center gap-2">
+                      <Input
+                        type="time"
+                        value={range.start}
+                        onChange={(e) => {
+                          const newRanges = [...timeRanges];
+                          newRanges[idx].start = e.target.value;
+                          setTimeRanges(newRanges);
+                        }}
+                        required
+                      />
+                      <span>-</span>
+                      <Input
+                        type="time"
+                        value={range.end}
+                        onChange={(e) => {
+                          const newRanges = [...timeRanges];
+                          newRanges[idx].end = e.target.value;
+                          setTimeRanges(newRanges);
+                        }}
+                        required
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setTimeRanges(timeRanges.filter((_, i) => i !== idx));
+                        }}
+                        disabled={timeRanges.length === 1}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() =>
+                      setTimeRanges([
+                        ...timeRanges,
+                        { start: "09:00", end: "17:00" },
+                      ])
+                    }
+                  >
+                    Add Time Range
+                  </Button>
                 </div>
               </div>
               <div>
