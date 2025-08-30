@@ -25,6 +25,7 @@ function getNextStage(currentStage: AppStage, cycleStage: AppStage) {
 export const setApplicantStage = async (
   applicationId: string,
   stage: AppStage,
+  systemStatuses: Record<string, string>,
 ) => {
   const session = await auth();
 
@@ -35,8 +36,11 @@ export const setApplicantStage = async (
   await db
     .update(applications)
     .set({
-      internalStatus: stage,
       updatedAt: new Date(),
+      systemStatuses: {
+        ...systemStatuses,
+        [session.user.systemId!]: stage,
+      },
     })
     .where(eq(applications.id, applicationId));
 };
@@ -44,6 +48,7 @@ export const setApplicantStage = async (
 export const setApplicantDecision = async (
   applicationId: string,
   decision: "ACCEPTED" | "REJECTED",
+  systemDecisions: Record<string, string>,
 ) => {
   const session = await auth();
 
@@ -62,12 +67,40 @@ export const setApplicantDecision = async (
   await db
     .update(applications)
     .set({
-      internalDecision: decision,
       updatedAt: new Date(),
-      rejectedFrom:
-        decision === "REJECTED"
-          ? app.rejectedFrom
-          : app.rejectedFrom.filter((sys) => sys !== session.user.teamId),
+      systemDecisions: {
+        ...systemDecisions,
+        [session.user.systemId!]: decision,
+      },
+    })
+    .where(eq(applications.id, applicationId));
+};
+
+export const setApplicationColor = async (
+  applicationId: string,
+  highlightColor: string | null,
+) => {
+  "use server";
+
+  const session = await auth();
+
+  if (!session || !hasPermission(session, "*application", "update")) {
+    return "User does not have permission to update applications";
+  }
+
+  const app = await db.query.applications.findFirst({
+    where: (t, { eq }) => eq(t.id, applicationId),
+  });
+
+  if (!app) {
+    return "Application not found";
+  }
+
+  await db
+    .update(applications)
+    .set({
+      updatedAt: new Date(),
+      highlightColor,
     })
     .where(eq(applications.id, applicationId));
 };
@@ -135,7 +168,11 @@ export async function moveApplicantToNextStage(applicationId: string) {
     application.cycle.stage,
   );
 
-  await setApplicantStage(applicationId, nextStage);
+  await setApplicantStage(
+    applicationId,
+    nextStage!,
+    application.systemStatuses,
+  );
 
   return nextStage;
 }

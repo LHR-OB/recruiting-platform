@@ -313,12 +313,15 @@ export const applications = createTable(
       .$type<
         Record<string, (typeof applicationStatusEnum.enumValues)[number]>
       >()
-      .default({}),
+      .default({})
+      .notNull(), // Decisions from each system
     systemStatuses: pgJsonb("systemStatus")
       .$type<
         Record<string, (typeof applicationCycleStatusEnum.enumValues)[number]>
       >()
-      .default({}),
+      .default({})
+      .notNull(), // Statuses from each system
+    highlightColor: pgVarchar("highlightColor", { length: 255 }),
   }),
   (t) => [
     index("application_user_idx").on(t.userId),

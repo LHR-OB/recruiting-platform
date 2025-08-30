@@ -235,6 +235,12 @@ export function DataTable<TData, TValue>({
                     row.original?.internalDecision === "REJECTED" &&
                       "opacity-50",
                   )}
+                  style={{
+                    backgroundColor:
+                      row.original.highlightColor !== "--color-transparent"
+                        ? `rgba(from var(${row.original.highlightColor}) r g b / 0.1)`
+                        : undefined,
+                  }}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="h-10">

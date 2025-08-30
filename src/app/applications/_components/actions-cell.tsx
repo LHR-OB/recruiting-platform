@@ -10,6 +10,7 @@ import {
   rejectApplicant,
   setApplicantDecision,
   setApplicantStage,
+  setApplicationColor,
   waitlistApplicant,
 } from "../actions";
 import { toast } from "sonner";
@@ -76,6 +77,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "~/components/ui/popover";
 const ActionsCell: ColumnDefTemplate<CellContext<Application, string>> = ({
   row,
   table,
@@ -381,6 +387,50 @@ const ActionsCell: ColumnDefTemplate<CellContext<Application, string>> = ({
                   <ChevronUpIcon className="h-4 w-4" />
                 </Button>
               </div>
+            </div>
+            <div className="mt-3 border-t px-4 pt-3">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 w-16 p-px">
+                    <div
+                      className="h-full w-full rounded-sm border"
+                      style={{
+                        backgroundColor: `var(${original.highlightColor})`,
+                      }}
+                    />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="flex w-auto gap-2 p-2">
+                  {[
+                    "--color-transparent",
+                    "--color-red-500",
+                    "--color-orange-500",
+                    "--color-yellow-500",
+                    "--color-green-500",
+                    "--color-blue-500",
+                  ].map((color) => (
+                    <button
+                      key={color}
+                      className={cn(
+                        "h-6 w-6 rounded-full border-2 border-white shadow focus:ring-2 focus:ring-offset-2 focus:outline-none",
+                      )}
+                      style={{ backgroundColor: `var(${color})` }}
+                      onClick={async () => {
+                        setRow((prev) =>
+                          prev.map((app) =>
+                            app.id === original.id
+                              ? { ...app, highlightColor: color }
+                              : app,
+                          ),
+                        );
+
+                        await setApplicationColor(original.id, color);
+                      }}
+                      aria-label={`Set highlight color ${color}`}
+                    />
+                  ))}
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
           <SheetHeader className="pt-1">
