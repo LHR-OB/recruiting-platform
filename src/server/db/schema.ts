@@ -309,9 +309,14 @@ export const applications = createTable(
       .$type<string[]>()
       .default([])
       .notNull(), // Array of system IDs considered
-    systemStatus: pgJsonb("systemStatus")
+    systemDecisions: pgJsonb("systemDecisions")
       .$type<
         Record<string, (typeof applicationStatusEnum.enumValues)[number]>
+      >()
+      .default({}),
+    systemStatuses: pgJsonb("systemStatus")
+      .$type<
+        Record<string, (typeof applicationCycleStatusEnum.enumValues)[number]>
       >()
       .default({}),
   }),
