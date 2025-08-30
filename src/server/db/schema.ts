@@ -274,6 +274,8 @@ export const applicationStatusEnum = pgEnum("application_status_enum", [
   "WAITLISTED",
   "ACCEPTED",
   "REJECTED",
+  "INCLINED",
+  "UNLIKELY",
 ]);
 
 export const applications = createTable(
@@ -288,10 +290,6 @@ export const applications = createTable(
     teamId: pgVarchar("teamId", { length: 255 })
       .notNull()
       .references(() => teams.id, { onDelete: "cascade" }),
-    systemId: pgVarchar("systemId", { length: 255 }).references(
-      () => systems.id,
-      { onDelete: "cascade" },
-    ),
     applicationCycleId: pgVarchar("applicationCycleId", { length: 255 })
       .notNull()
       .references(() => applicationCycles.id, { onDelete: "cascade" }),
@@ -311,12 +309,16 @@ export const applications = createTable(
       .$type<string[]>()
       .default([])
       .notNull(), // Array of system IDs considered
+    systemStatus: pgJsonb("systemStatus")
+      .$type<
+        Record<string, (typeof applicationStatusEnum.enumValues)[number]>
+      >()
+      .default({}),
   }),
   (t) => [
     index("application_user_idx").on(t.userId),
     index("application_cycle_idx").on(t.applicationCycleId),
     index("application_team_idx").on(t.teamId),
-    index("application_system_idx").on(t.systemId),
   ],
 );
 
