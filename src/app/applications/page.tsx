@@ -13,6 +13,7 @@ import { unstable_cacheLife } from "next/cache";
 
 async function getBlacklist() {
   "use cache";
+  return [];
 
   unstable_cacheTag("blacklist");
   unstable_cacheLife("hours");
@@ -78,12 +79,12 @@ const Page = async () => {
           ? eq(applications.teamId, session.user.teamId)
           : undefined,
 
-        blacklist.length > 0
-          ? notInArray(
-              applications.userId,
-              blacklist.map((b) => b.user!.id),
-            )
-          : undefined,
+        // blacklist.length > 0
+        //   ? notInArray(
+        //       applications.userId,
+        //       blacklist.map((b) => b.user!.id),
+        //     )
+        //   : undefined,
 
         eq(applications.applicationCycleId, currStage.id),
       ),
