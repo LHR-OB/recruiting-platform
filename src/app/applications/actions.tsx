@@ -125,28 +125,17 @@ export const rejectApplicant = async (
     return "Application not found";
   }
 
-  if (!application.rejectedFrom.includes(systemId)) {
-    if (application.rejectedFrom.length + 1 >= 3) {
-      await db
-        .update(applications)
-        .set({
-          internalDecision: "REJECTED",
-          updatedAt: new Date(),
-          rejectedFrom: [...application.rejectedFrom, systemId],
-        })
-        .where(eq(applications.id, applicationId));
-    } else {
-      await db
-        .update(applications)
-        .set({
-          rejectedFrom: [...application.rejectedFrom, systemId],
-          updatedAt: new Date(),
-        })
-        .where(eq(applications.id, applicationId));
-    }
-  } else {
-    return "System already in rejected list";
-  }
+  await db
+    .update(applications)
+    .set({
+      internalDecision: "REJECTED",
+      updatedAt: new Date(),
+      systemDecisions: {
+        ...application.systemDecisions,
+        [systemId]: "REJECTED",
+      },
+    })
+    .where(eq(applications.id, applicationId));
 };
 
 export async function moveApplicantToNextStage(applicationId: string) {
