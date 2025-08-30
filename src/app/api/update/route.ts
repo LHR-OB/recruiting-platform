@@ -74,6 +74,7 @@ const GET = async () => {
             .where(eq(applications.applicationCycleId, cycle.id)),
         ]);
 
+        // cry
         await Promise.all(
           applicationsInStage.map(async (application, i) => {
             if (application.status === application.internalDecision) {

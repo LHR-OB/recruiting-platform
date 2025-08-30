@@ -41,7 +41,11 @@ const AppPage = async ({
           eidEmailVerified: true,
         },
       },
-      cycle: true,
+      cycle: {
+        with: {
+          stages: true,
+        },
+      },
     },
   });
 
@@ -95,7 +99,10 @@ const AppPage = async ({
               "use server";
 
               if (
-                application.cycle.stage !== "APPLICATION" ||
+                (application.cycle.stages.find(
+                  (s) => s.stage === "APPLICATION" && s.endDate < new Date(),
+                ) &&
+                  application.cycle.stage !== "APPLICATION") ||
                 application.status === "NEEDS_REVIEW"
               ) {
                 return "Application is not in the correct state to be submitted.";
