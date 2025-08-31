@@ -24,11 +24,7 @@ const GET = async () => {
 
   for (const cycle of cycles) {
     for (const stage of cycle.stages) {
-      if (
-        stage.startDate <= now &&
-        stage.endDate >= now &&
-        stage.stage !== cycle.stage
-      ) {
+      if (stage.startDate <= now && stage.endDate >= now) {
         await db.batch([
           db
             .update(applicationCycles)
