@@ -25,8 +25,8 @@ const Rejected = ({ team, name }: { team: string; name: string }) => {
           ever-increasing number of applicants every year and with that a harder
           decision to make in selecting new members. We hope that you enjoyed
           learning more about the team and you’ll reapply in the future! If you
-          believe that you have received this email by mistake, please reach out
-          to recruitment@longhornracing.
+          believe that you have received this message by mistake, please reach out
+          to longhornracingrecruitment@gmail.com.
           <br /> <br /> Sincerely, <br /> <br />
           Leo Cheong
         </p>
