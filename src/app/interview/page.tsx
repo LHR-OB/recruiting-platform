@@ -51,18 +51,15 @@ export default async function InterviewPage({
     return notFound();
   }
 
-  const { system1, system2, system3 } = application.data as {
-    system1?: string;
-    system2?: string;
-    system3?: string;
-  };
-  const systems = [system1, system2, system3].filter(Boolean) as string[];
+  const systems = Object.entries(application.systemDecisions)
+    .filter((s) => s[1] === "NEEDS_REVIEW")
+    .map((s) => s[0]);
 
   // Get all systems for the selected application's team
   const teamSystems = await db.query.systems.findMany({
     where: (t, { inArray, and, eq }) =>
       and(
-        inArray(t.name, systems.length ? systems : ["bad"]),
+        inArray(t.id, systems.length ? systems : ["bad"]),
         eq(t.teamId, application.team.id),
       ),
     columns: {
