@@ -7,7 +7,7 @@ import { db } from "~/server/db";
 import { emailVerifications, users } from "~/server/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { transporter } from "../api/update/route";
+// import { transporter } from "../api/update/route";
 
 const updateProfileSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -57,7 +57,7 @@ export async function revalidateEmail(email: string) {
     text: `Please verify your email at https://recruiting.longhornracing.org/verify/${verification.token}`,
   };
 
-  await transporter.sendMail(mailOptions);
+  // await transporter.sendMail(mailOptions);
 }
 
 export async function updateProfile(formData: FormData) {

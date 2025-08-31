@@ -11,7 +11,7 @@ import {
 import { eq, and, gte, lte, or } from "drizzle-orm";
 import { addMinutes, startOfDay, endOfDay, isAfter } from "date-fns";
 import { auth } from "~/server/auth";
-import { transporter } from "../api/update/route";
+// import { transporter } from "../api/update/route";
 import ical, {
   ICalAlarmType,
   ICalAttendee,
@@ -251,15 +251,15 @@ export async function scheduleInterview(
     trigger: 30 * 60, // 30 minutes before
   });
 
-  await transporter.sendMail({
-    from: "Longhorn Racing <longhornracingrecruitment@gmail.com>",
-    to: session.user.email!,
-    subject: `Application Update for ${application.team.name}`,
-    text: `Dear applicant,\n\nYour interview for the ${application.team.name} team has been scheduled.\n\nDate: ${startTime.toLocaleDateString()}\nTime: ${startTime.toLocaleTimeString()}\nDuration: 30 minutes\nLocation: Video Call\n\nSincerely,\nLonghorn Racing Recruitment\nhttps://recruiting.longhornracing.org/`,
-    icalEvent: {
-      filename: "interview.ics",
-      method: "request",
-      content: calendarEvent.toString(),
-    },
-  });
+  // await transporter.sendMail({
+  //   from: "Longhorn Racing <longhornracingrecruitment@gmail.com>",
+  //   to: session.user.email!,
+  //   subject: `Application Update for ${application.team.name}`,
+  //   text: `Dear applicant,\n\nYour interview for the ${application.team.name} team has been scheduled.\n\nDate: ${startTime.toLocaleDateString()}\nTime: ${startTime.toLocaleTimeString()}\nDuration: 30 minutes\nLocation: Video Call\n\nSincerely,\nLonghorn Racing Recruitment\nhttps://recruiting.longhornracing.org/`,
+  //   icalEvent: {
+  //     filename: "interview.ics",
+  //     method: "request",
+  //     content: calendarEvent.toString(),
+  //   },
+  // });
 }

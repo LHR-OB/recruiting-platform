@@ -26,11 +26,7 @@ export default async function InterviewPage({
 
   const application = await db.query.applications.findFirst({
     where: (t, { eq, and }) =>
-      and(
-        eq(t.id, applicationId),
-        eq(t.status, "NEEDS_REVIEW"),
-        eq(t.internalStatus, "INTERVIEW"),
-      ),
+      and(eq(t.id, applicationId), eq(t.status, "NEEDS_REVIEW")),
     with: {
       team: {
         columns: {
