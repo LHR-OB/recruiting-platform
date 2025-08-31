@@ -1,18 +1,11 @@
 import { eq, sql } from "drizzle-orm";
 import { db } from "~/server/db";
 import { applicationCycles, applications } from "~/server/db/schema";
+import { Resend } from "resend";
+import { env } from "~/env";
+import { EmailTemplate } from "./template";
 
-import nodemailer from "nodemailer";
-
-export const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587, // Use 465 for SSL, 587 for TLS
-  secure: false, // Set to true for port 465
-  auth: {
-    user: "longhornracingrecruitment@gmail.com", // Your Gmail address
-    pass: "wdpj spbk ifsc lwir", // Your Gmail password or App Password
-  },
-});
+const resend = new Resend(env.RESEND_TOKEN);
 
 const GET = async () => {
   // push stages when appriorate,
@@ -36,24 +29,6 @@ const GET = async () => {
         stage.endDate >= now &&
         stage.stage !== cycle.stage
       ) {
-        const applicationsInStage = await db.query.applications.findMany({
-          where: (a, { eq }) => eq(a.applicationCycleId, cycle.id),
-          with: {
-            user: {
-              columns: {
-                id: true,
-                name: true,
-                email: true,
-              },
-            },
-            team: {
-              columns: {
-                name: true,
-              },
-            },
-          },
-        });
-
         await db.batch([
           db
             .update(applicationCycles)
@@ -65,37 +40,41 @@ const GET = async () => {
             .update(applications)
             .set({
               status: sql`
-                      CASE
-                        WHEN ${applications.internalDecision} IS NOT NULL THEN ${applications.internalDecision}
-                        ELSE 'REJECTED' -- Or another column, or NULL
-                      END
-                    `,
+                CASE
+                  WHEN EXISTS (
+                    SELECT 1
+                    FROM jsonb_each_text(${applications.systemStatuses}) AS kv
+                    WHERE kv.value = 'NEEDS_REVIEW'
+                  ) THEN 'NEEDS_REVIEW'
+                  ELSE 'REJECTED'
+                END
+              `,
             })
             .where(eq(applications.applicationCycleId, cycle.id)),
         ]);
 
-        // cry
-        await Promise.all(
-          applicationsInStage.map(async (application, i) => {
-            if (application.status === application.internalDecision) {
-              return;
-            }
+        const applicationInStage = await db.query.applications.findMany({
+          where: (t, { eq }) => eq(t.applicationCycleId, cycle.id),
+          with: {
+            user: true,
+            team: true,
+          },
+        });
 
-            await new Promise((resolve) => setTimeout(resolve, i * 750));
-
-            const mailOptions = {
-              from: "Longhorn Racing <longhornracingrecruitment@gmail.com>",
-              to: application.user.email,
-              subject: `Application Update for ${application.team.name}`,
-
-              text: `Dear ${application.user.name},\n\nYour application for the ${application.team.name} team has a new update.\n\nSincerely,\nLonghorn Racing\nhttps://recruiting.longhornracing.org/`,
-            };
-
-            await transporter.sendMail(mailOptions).catch((error) => {
-              console.error("Error sending email:", error);
-            });
-          }),
-        );
+        // 100 limit batch
+        const batchSize = 100;
+        for (let i = 0; i < applicationInStage.length; i += batchSize) {
+          const batch = applicationInStage.slice(i, i + batchSize);
+          await resend.batch.send(
+            batch.map((app) => ({
+              from: "Longhorn Racing",
+              to: app.user.email,
+              subject: `Application Update for ${app.team.name}`,
+              react: EmailTemplate({ name: app.user.name! }),
+              idempotencyKey: `application-update-${app.id}-${stage.stage}-${new Date().toISOString().split("T")[0]}`,
+            })),
+          );
+        }
       }
     }
   }
