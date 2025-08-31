@@ -45,8 +45,8 @@ const GET = async () => {
                     SELECT 1
                     FROM jsonb_each_text(${applications.systemStatuses}) AS kv
                     WHERE kv.value = 'NEEDS_REVIEW'
-                  ) THEN 'NEEDS_REVIEW'
-                  ELSE 'REJECTED'
+                  ) THEN 'NEEDS_REVIEW'::application_status_enum
+                  ELSE 'REJECTED'::application_status_enum
                 END
               `,
             })
