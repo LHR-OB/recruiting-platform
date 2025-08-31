@@ -69,11 +69,9 @@ const Page = async () => {
   }
 
   let data = await db.query.applications.findMany({
-    where: (applications, { eq, and, ne, isNotNull, notInArray }) =>
+    where: (applications, { eq, and, ne, notInArray }) =>
       and(
         ne(applications.status, "DRAFT"),
-
-        isNotNull(applications.internalDecision),
 
         !isAtLeast(session.user.role, "ADMIN")
           ? eq(applications.teamId, session.user.teamId)
@@ -142,23 +140,18 @@ const Page = async () => {
     );
   }
 
-  data = data
-    .map((app) => ({
-      ...app,
-      otherApplications: app.user.applications.filter(
-        (otherApp) =>
-          app.applicationCycleId === otherApp.applicationCycleId &&
-          app.id !== otherApp.id,
-      ),
-    }))
-    .map((app) => ({
-      ...app,
-      internalDecision:
-        app.systemDecisions[session.user.systemId!] ?? "NEEDS_REVIEW",
-      internalStatus:
-        app.systemStatuses[session.user.systemId!] ?? "APPLICATION",
-      highlightColor: app.highlightColor?.[session.user.systemId!],
-    }));
+  data = data.map((app) => ({
+    ...app,
+    otherApplications: app.user.applications.filter(
+      (otherApp) =>
+        app.applicationCycleId === otherApp.applicationCycleId &&
+        app.id !== otherApp.id,
+    ),
+    internalDecision:
+      app.systemDecisions[session.user.systemId!] ?? "NEEDS_REVIEW",
+    internalStatus: app.systemStatuses[session.user.systemId!] ?? "APPLICATION",
+    highlightColor: app.highlightColor?.[session.user.systemId!],
+  }));
 
   return (
     <>

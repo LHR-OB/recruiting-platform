@@ -67,7 +67,7 @@ const GET = async () => {
           const batch = applicationInStage.slice(i, i + batchSize);
           await resend.batch.send(
             batch.map((app) => ({
-              from: "Longhorn Racing",
+              from: "Longhorn Racing <lhr@platformzinc.dev>",
               to: app.user.email,
               subject: `Application Update for ${app.team.name}`,
               react: EmailTemplate({ name: app.user.name! }),
