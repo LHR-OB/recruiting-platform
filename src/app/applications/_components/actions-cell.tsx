@@ -82,6 +82,7 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "~/components/ui/popover";
+
 const ActionsCell: ColumnDefTemplate<CellContext<Application, string>> = ({
   row,
   table,

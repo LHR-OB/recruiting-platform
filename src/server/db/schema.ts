@@ -321,7 +321,9 @@ export const applications = createTable(
       >()
       .default({})
       .notNull(), // Statuses from each system
-    highlightColor: pgVarchar("highlightColor", { length: 255 }),
+    highlightColor: pgJsonb("highlightColor")
+      .$type<Record<string, string | null>>()
+      .default({}),
   }),
   (t) => [
     index("application_user_idx").on(t.userId),

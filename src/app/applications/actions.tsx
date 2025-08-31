@@ -78,7 +78,7 @@ export const setApplicantDecision = async (
 
 export const setApplicationColor = async (
   applicationId: string,
-  highlightColor: string | null,
+  highlightColor: string,
 ) => {
   "use server";
 
@@ -100,7 +100,10 @@ export const setApplicationColor = async (
     .update(applications)
     .set({
       updatedAt: new Date(),
-      highlightColor,
+      highlightColor: {
+        ...app.highlightColor,
+        [session.user.systemId!]: highlightColor,
+      },
     })
     .where(eq(applications.id, applicationId));
 };

@@ -157,6 +157,7 @@ const Page = async () => {
         app.systemDecisions[session.user.systemId!] ?? "NEEDS_REVIEW",
       internalStatus:
         app.systemStatuses[session.user.systemId!] ?? "APPLICATION",
+      highlightColor: app.highlightColor?.[session.user.systemId!],
     }));
 
   return (
