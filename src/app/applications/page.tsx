@@ -153,6 +153,8 @@ const Page = async () => {
     highlightColor: app.highlightColor?.[session.user.systemId!],
   }));
 
+  console.log(data);
+
   return (
     <>
       <div className="pb-6">

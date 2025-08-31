@@ -270,6 +270,7 @@ const ActionsCell: ColumnDefTemplate<CellContext<Application, string>> = ({
                           const error = await setApplicantStage(
                             original.id,
                             value,
+                            original.systemStatuses,
                           );
 
                           if (error) {
@@ -310,6 +311,7 @@ const ActionsCell: ColumnDefTemplate<CellContext<Application, string>> = ({
                           const error = await setApplicantDecision(
                             original.id,
                             value,
+                            original.systemDecisions,
                           );
 
                           if (error) {
