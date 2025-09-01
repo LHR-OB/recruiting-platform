@@ -58,6 +58,16 @@ export async function getAvailabilities() {
   return userAvailabilities;
 }
 
+export async function getInterviews() {
+  const { user } = await checkAccessPermissions();
+
+  const interviews = await db.query.interviews.findMany({
+    where: (t, { eq }) => eq(user.systemId, t.systemId)
+  });
+
+  return interviews;
+}
+
 export async function getOthersAvailabilities() {
   const { user } = await checkAccessPermissions();
 
